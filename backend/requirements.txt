@@ -1,0 +1,4 @@
+# Authentication dependencies
+python-dotenv>=1.0.0
+
+# Note: getpass is part of Python standard library (no installation needed)

@@ -6,6 +6,45 @@ Implements auth.skill.md session requirements:
 - Expose authenticated user_id
 - Session valid for runtime duration
 - Session destroyed on exit
+
+Session Lifecycle (T037):
+--------------------
+
+1. Created:
+   - Session object instantiated as module-level singleton (_session)
+   - Initial state: user_id=None, username=None, authenticated=False
+   - Created on module import (before authentication)
+
+2. Active (Authenticated):
+   - Triggered by: authenticate_user() calling session.login()
+   - State: user_id=<value>, username=<value>, authenticated=True
+   - Duration: Throughout application lifetime (process runtime)
+   - Persistence: In-memory only, not saved to disk/database
+   - Access: get_current_user() returns user_id without re-authentication
+   - Validation: is_authenticated() checks state consistency
+
+3. Destroyed:
+   - Triggered by: Application exit (process termination)
+   - State: Session data cleared from memory
+   - No explicit cleanup required (handled by process exit)
+   - Note: logout() method available for explicit session clearing if needed
+
+Session Persistence Guarantee:
+------------------------------
+Once authenticated via authenticate_user(), the session context persists
+across ALL subsequent function calls within the same process lifetime.
+No re-authentication is required for task CRUD operations after initial login.
+
+Example:
+    >>> # Application startup
+    >>> prompt_for_credentials()  # Authenticates once
+    >>>
+    >>> # Session persists across multiple operations
+    >>> task1 = create_task("First task")   # Uses session, no re-auth
+    >>> task2 = create_task("Second task")  # Uses session, no re-auth
+    >>> tasks = list_tasks()                # Uses session, no re-auth
+    >>>
+    >>> # All operations use same user_id from initial authentication
 """
 
 from functools import wraps
@@ -67,9 +106,13 @@ _session = SessionContext()
 
 def is_authenticated() -> bool:
     """
-    Check if user is currently authenticated.
+    Check if user is currently authenticated with session state validation.
 
     Following auth.skill.md specification: is_authenticated() function.
+
+    Validates session consistency:
+    - If authenticated=True, username and user_id must be set
+    - If authenticated=False, username and user_id must be None
 
     Returns:
         True if authenticated, False otherwise
@@ -80,6 +123,20 @@ def is_authenticated() -> bool:
         ... else:
         ...     print("Please authenticate first")
     """
+    # Validate session state consistency (T036)
+    if _session.authenticated:
+        # If authenticated, username and user_id must be present
+        if not _session.username or not _session.user_id:
+            # Inconsistent state - authenticated but missing credentials
+            _session.authenticated = False
+            return False
+    else:
+        # If not authenticated, username and user_id should be None
+        if _session.username is not None or _session.user_id is not None:
+            # Inconsistent state - not authenticated but has credentials
+            _session.username = None
+            _session.user_id = None
+
     return _session.authenticated
 
 

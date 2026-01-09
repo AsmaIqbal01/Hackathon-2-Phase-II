@@ -5,19 +5,19 @@ stage: spec
 date: 2026-01-09
 surface: agent
 model: claude-sonnet-4-5-20250929
-feature: 002-backend-api-database
-branch: 002-backend-api-database
+feature: F01-S01-backend-api-database
+branch: F01-S01-backend-api-database
 user: system
 command: /sp.specify
 labels: ["backend", "api", "database", "fastapi", "sqlmodel", "neon", "specification"]
 links:
-  spec: specs/002-backend-api-database/spec.md
+  spec: specs/F01-S01-backend-api-database/spec.md
   ticket: null
   adr: null
   pr: null
 files:
- - specs/002-backend-api-database/spec.md
- - specs/002-backend-api-database/checklists/requirements.md
+ - specs/F01-S01-backend-api-database/spec.md
+ - specs/F01-S01-backend-api-database/checklists/requirements.md
 tests:
  - None (specification phase, tests defined but not implemented)
 ---
@@ -45,7 +45,7 @@ Focus:
 All basic-level Todo operations should be included. Backend should be designed to make it easy to add authentication in Spec 2.
 
 Success criteria:
-- Detailed specification document created in specs/002-backend-api-database/spec.md
+- Detailed specification document created in specs/F01-S01-backend-api-database/spec.md
 - All user stories prioritized and independently testable
 - 30+ functional requirements documented
 - Multi-user isolation enforced (even without JWT)
@@ -99,7 +99,7 @@ Created comprehensive specification for Backend API & Database feature with:
 
 **Out of Scope**: 15 features explicitly deferred including authentication (Spec 2), user management (Spec 2), pagination, search, subtasks, due dates, file attachments, real-time updates, audit logs, soft deletes, bulk operations, task sharing, export/import, rate limiting, caching
 
-**Quality Checklist**: Created `specs/002-backend-api-database/checklists/requirements.md` with:
+**Quality Checklist**: Created `specs/F01-S01-backend-api-database/checklists/requirements.md` with:
 - Completeness verification (user stories, requirements, success criteria, edge cases)
 - Clarity verification (no ambiguity, measurable, clear boundaries)
 - Testability verification (acceptance tests, integration tests, error tests)

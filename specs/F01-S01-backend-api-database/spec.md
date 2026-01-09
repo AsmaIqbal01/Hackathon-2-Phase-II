@@ -1,6 +1,6 @@
 # Feature Specification: Backend API & Database
 
-**Feature Branch**: `002-backend-api-database`
+**Feature Branch**: `F01-S01-backend-api-database`
 **Created**: 2026-01-09
 **Status**: Draft
 **Input**: User description: "Project: Todo Full-Stack Web Application – Spec 1: Backend API & Database"

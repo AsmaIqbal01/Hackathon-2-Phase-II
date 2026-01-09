@@ -1,6 +1,6 @@
 # Specification Quality Checklist: Backend API & Database
 
-**Spec ID**: 002-backend-api-database
+**Spec ID**: F01-S01-backend-api-database
 **Date**: 2026-01-09
 **Status**: Draft
 

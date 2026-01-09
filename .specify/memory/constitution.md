@@ -1,40 +1,34 @@
 <!--
-Sync Impact Report (2026-01-02)
+Sync Impact Report (2026-01-09)
 ─────────────────────────────────────────────────────────────────────────────
-Version Change: INITIAL → 1.0.0
-Rationale: First constitution for Phase II (MINOR bump from template baseline)
+Version Change: 1.0.0 → 1.1.0
+Rationale: MINOR bump - Added new principles and expanded governance without
+           removing existing principles or making backward-incompatible changes.
 
 Modified Principles:
-- NEW: I. Spec-Driven Development Only
-- NEW: II. Reuse Over Reinvention
-- NEW: III. Amendment-Based Development
-- NEW: IV. Multi-User Data Ownership
-- NEW: V. Stateless Authentication
-- NEW: VI. Web-First Architecture
-- NEW: VII. Test-Driven Development
-- NEW: VIII. Observability & Error Handling
+- EXPANDED: I. Spec-Driven Development Only - Added constitution requirement
+- EXPANDED: II. Reuse Over Reinvention - Emphasized reuse of .claude/ artifacts
+- NEW: IX. Agentic Execution Only - Formalized Claude Code-only constraint
+- NEW: X. Reviewability as First-Class - Process artifacts and traceability
+- EXPANDED: Governance - Added hackathon evaluation constraints
 
 Added Sections:
-- Core Principles (8 principles)
-- Technology Stack
-- Architectural Boundaries
-- Authentication & Authorization
-- Data Ownership & Isolation
-- REST API Standards
-- Database & Persistence
-- Testing Philosophy
-- Governance
+- Principle IX: Agentic Execution Only
+- Principle X: Reviewability as First-Class
+- Hackathon Evaluation Constraints (under Governance)
+- Spec Artifact Requirements (under Governance)
 
 Removed Sections:
-- None (initial constitution)
+- None
 
 Templates Requiring Updates:
-✅ plan-template.md - Constitution Check section verified compatible
+✅ plan-template.md - Constitution Check section compatible
 ✅ spec-template.md - Requirements alignment verified
-✅ tasks-template.md - Task categorization verified compatible
+✅ tasks-template.md - Task categorization compatible
+⚠ Consider adding constitution.md requirement to spec-template.md
 
 Follow-up TODOs:
-- None - all placeholders resolved
+- None - all principles defined
 
 Dependent Artifacts:
 - Phase I Repository: https://github.com/AsmaIqbal01/Hackathon2-phase1
@@ -57,7 +51,7 @@ All principles, patterns, and constraints from the following repositories remain
 2. **Frontend Agent System**: https://github.com/AsmaIqbal01/frontend_agent_system
 3. **Backend Agent System**: https://github.com/AsmaIqbal01/Backend_agent_system
 
-**Purpose**: Enable persistent, multi-user todo management via web interface while maintaining spec-driven, AI-generated-only development.
+**Purpose**: Enable persistent, multi-user todo management via web interface while maintaining spec-driven, AI-generated-only development for hackathon demonstration.
 
 ---
 
@@ -65,24 +59,28 @@ All principles, patterns, and constraints from the following repositories remain
 
 ### I. Spec-Driven Development Only
 
-**Rule**: All code MUST originate from specifications. No manual coding is permitted.
+**Rule**: All code MUST originate from specifications. No manual coding is permitted. Every feature MUST have a constitution, specification, and plan before implementation.
 
+**Mandatory Artifacts**:
 - Every feature begins with a specification in `specs/<feature>/spec.md`
+- Every spec MUST have a constitution defining its principles
+- Every spec MUST have a specification defining requirements
+- Every spec MUST have an implementation plan (`plan.md`)
 - Specifications are the single source of truth
 - Implementation plans derived from specs via `/sp.plan`
 - Tasks generated from plans via `/sp.tasks`
 - Code generated only through spec-driven workflows
 - All changes require spec amendments before implementation
 
-**Rationale**: Ensures traceability, consistency, and AI-driven quality. Prevents drift between intent and implementation.
+**Rationale**: Ensures traceability, consistency, and AI-driven quality. Prevents drift between intent and implementation. Enables hackathon evaluation of specification quality.
 
-**Violation Detection**: Any code not traceable to a spec file or PHR constitutes a violation.
+**Violation Detection**: Any code not traceable to a spec file or PHR constitutes a violation. Missing constitution, specification, or plan for any feature.
 
 ---
 
 ### II. Reuse Over Reinvention
 
-**Rule**: Reuse existing logic, patterns, and intelligence from authoritative repositories before creating new implementations.
+**Rule**: Reuse existing logic, patterns, and intelligence from authoritative repositories and project artifacts before creating new implementations.
 
 **MUST Reuse from Phase I**:
 - Task CRUD logic (create, read, update, delete)
@@ -103,9 +101,14 @@ All principles, patterns, and constraints from the following repositories remain
 - State management approaches
 - API client patterns
 
-**Rationale**: Proven patterns reduce bugs, accelerate development, and maintain consistency across phases.
+**MUST Reuse from Project Artifacts**:
+- Existing agents in `.claude/agents/` (MUST NOT duplicate)
+- Existing skills in `.claude/skills/` (MUST NOT duplicate)
+- Reference and extend existing agents/skills instead of recreating
 
-**Violation Detection**: Creating new implementations when equivalent logic exists in authoritative repositories.
+**Rationale**: Proven patterns reduce bugs, accelerate development, and maintain consistency across phases. Prevents duplication of agent and skill logic.
+
+**Violation Detection**: Creating new implementations when equivalent logic exists in authoritative repositories. Duplicating agents or skills already present in `.claude/`.
 
 ---
 
@@ -126,15 +129,20 @@ All principles, patterns, and constraints from the following repositories remain
 - Priority constraints
 - Error messages for business logic
 
-**Rationale**: Minimizes specification overhead and prevents unintended behavioral drift.
+**No Spec Assumption Without Reference**:
+- No spec may assume behavior defined in another spec without explicit reference
+- Cross-spec dependencies MUST be documented in both specs
+- If referencing Phase I behavior, MUST cite Phase I repository
 
-**Violation Detection**: Specifications that redefine unchanged Phase I behavior.
+**Rationale**: Minimizes specification overhead and prevents unintended behavioral drift. Ensures specs are self-contained and understandable.
+
+**Violation Detection**: Specifications that redefine unchanged Phase I behavior. Specs that assume behavior without explicit reference.
 
 ---
 
 ### IV. Multi-User Data Ownership
 
-**Rule**: Each task belongs to exactly one user. Cross-user access is forbidden.
+**Rule**: Each task belongs to exactly one user. Cross-user access is forbidden. Backend enforces authorization, not frontend.
 
 **Ownership Enforcement**:
 - Every task record MUST include `user_id` field
@@ -144,14 +152,16 @@ All principles, patterns, and constraints from the following repositories remain
 - Users can ONLY delete their own tasks
 - Attempting cross-user access MUST return HTTP 403 Forbidden
 
-**Backend Responsibility**:
+**Backend Responsibility (Security by Design)**:
 - Extract `user_id` from verified JWT token
-- Ignore any `user_id` passed directly by client
+- NEVER trust any `user_id` passed directly by client
 - Scope all database queries to authenticated user
+- Authorization is enforced on the backend, NOT frontend
+- Frontend UI restrictions are UX only, NOT security
 
-**Rationale**: Ensures data privacy and isolation in multi-user environment.
+**Rationale**: Ensures data privacy and isolation in multi-user environment. Backend-enforced authorization prevents security bypasses.
 
-**Violation Detection**: Any endpoint that returns or modifies tasks without user filtering, or accepts `user_id` from client input.
+**Violation Detection**: Any endpoint that returns or modifies tasks without user filtering, or accepts `user_id` from client input. Frontend-only authorization checks.
 
 ---
 
@@ -171,6 +181,7 @@ All principles, patterns, and constraints from the following repositories remain
 - Tokens MUST include `user_id` claim
 - Backend MUST verify signature before processing requests
 - Backend MUST reject expired or invalid tokens with HTTP 401 Unauthorized
+- No trust in frontend-provided user identifiers
 
 **Rationale**: Enables horizontal scaling, simplifies backend logic, and follows modern authentication best practices.
 
@@ -180,7 +191,7 @@ All principles, patterns, and constraints from the following repositories remain
 
 ### VI. Web-First Architecture
 
-**Rule**: Application structured as decoupled frontend and backend with clear boundaries.
+**Rule**: Application structured as decoupled frontend and backend with clear boundaries and separation of concerns.
 
 **Frontend (Next.js 16+)**:
 - App Router architecture
@@ -202,6 +213,7 @@ All principles, patterns, and constraints from the following repositories remain
 - Frontend communicates with backend exclusively via REST API
 - No direct database access from frontend
 - No server-side rendering of user data (API-first)
+- Clear separation of concerns (UI vs business logic vs data)
 
 **Rationale**: Clear separation of concerns, independent scaling, and technology flexibility.
 
@@ -280,6 +292,52 @@ All principles, patterns, and constraints from the following repositories remain
 
 ---
 
+### IX. Agentic Execution Only
+
+**Rule**: ALL implementation MUST be performed via Claude Code using the Agentic Dev Stack workflow. No manual code edits permitted.
+
+**Execution Requirements**:
+- All code generation via Claude Code
+- No manual code edits in any project files
+- No ad-hoc implementation outside Claude Code
+- Use specialized agents for implementation:
+  - `nextjs-frontend-optimizer` for frontend
+  - `fastapi-backend-agent` for backend APIs
+  - `database-optimizer` for database schema/migrations
+  - `auth-agent` for authentication validation
+- Follow workflow: spec → plan → tasks → agentic execution
+
+**Rationale**: Ensures reproducibility, traceability, and demonstrates AI-driven development capabilities for hackathon evaluation.
+
+**Violation Detection**: Any code files modified without corresponding PHR (Prompt History Record). Any manual edits to generated code.
+
+---
+
+### X. Reviewability as First-Class
+
+**Rule**: Process, prompts, and iterations are first-class artifacts. All work MUST be traceable and reviewable.
+
+**Artifact Requirements**:
+- Every user interaction captured in PHR (Prompt History Record)
+- PHRs stored in `history/prompts/` with stage routing
+- Significant architectural decisions documented in ADRs
+- ADRs stored in `history/adr/`
+- All specs, plans, and tasks committed to repository
+- Git commits reference specs and PHRs
+
+**Process Traceability**:
+- Hackathon reviewers can trace every feature from spec → plan → tasks → implementation
+- PHRs demonstrate prompt engineering and iteration quality
+- ADRs demonstrate architectural decision-making
+- Specs demonstrate requirements elicitation and clarity
+- Plans demonstrate design thinking and task decomposition
+
+**Rationale**: Enables hackathon evaluation of specification quality, planning quality, and adherence to agentic workflow. Demonstrates process maturity.
+
+**Violation Detection**: Missing PHRs for user interactions. Undocumented architectural decisions. Untracked specifications or plans.
+
+---
+
 ## Technology Stack
 
 ### Frontend
@@ -312,7 +370,7 @@ All principles, patterns, and constraints from the following repositories remain
 ### Frontend Responsibilities
 - User authentication (Better Auth)
 - UI rendering and interaction
-- Form validation (client-side for UX)
+- Form validation (client-side for UX only, NOT security)
 - API requests with JWT headers
 - Error display to users
 
@@ -323,12 +381,14 @@ All principles, patterns, and constraints from the following repositories remain
 - Server-side validation (authoritative)
 - API endpoint implementation
 - Database queries scoped to authenticated user
+- Authorization enforcement (security boundary)
 
 ### Clear Separation
 - Frontend NEVER accesses database directly
 - Backend NEVER renders HTML or UI components
 - Authentication credentials stored only in frontend (cookies/localStorage)
 - Business logic duplicated in frontend only for UX (not security)
+- Security enforced ONLY on backend
 
 ---
 
@@ -484,6 +544,14 @@ Maintain Phase I test philosophy while adding web-specific tests:
 5. Propagate changes to dependent templates
 6. Commit amendment with ADR if architecturally significant
 
+### Spec Artifact Requirements
+Every feature specification MUST include:
+1. **Constitution**: Feature-specific principles and constraints (can reference this document)
+2. **Specification** (`spec.md`): Requirements, acceptance criteria, user stories
+3. **Plan** (`plan.md`): Architecture decisions, API contracts, task decomposition
+
+Features without all three artifacts are **incomplete** and MUST NOT be implemented.
+
 ### Compliance Verification
 - All PRs MUST verify constitutional compliance
 - Complexity MUST be justified (see plan-template.md "Complexity Tracking")
@@ -496,6 +564,27 @@ Maintain Phase I test philosophy while adding web-specific tests:
 - MINOR: New principles or sections added
 - PATCH: Clarifications, wording, typo fixes
 
+### Hackathon Evaluation Constraints
+
+**Review Focus Areas**:
+- **Correctness of specifications**: Clear, testable, complete requirements
+- **Quality of plans**: Well-reasoned architectural decisions and task decomposition
+- **Adherence to agentic workflow**: All code traceable to specs via PHRs
+- **Process artifacts**: PHRs demonstrate prompt engineering quality
+- **Spec completeness**: Constitution, specification, and plan present for each feature
+
+**Demonstration Requirements**:
+- Multi-user support (multiple users managing separate todos)
+- Persistent storage (data survives application restart)
+- Secure authentication (JWT-based, user-scoped access)
+- Full-stack integration (frontend + backend + database working together)
+
+**Success is measured by**:
+- Specification clarity and completeness
+- Plan quality and architectural soundness
+- Agentic workflow adherence (no manual coding)
+- Final system demonstrating all four requirements above
+
 ---
 
 ## Success Criteria for Phase II
@@ -506,12 +595,14 @@ Phase II is complete when:
 2. ✅ Data persists across sessions (PostgreSQL)
 3. ✅ Multiple users can use the system independently
 4. ✅ Authentication enforced on all endpoints
-5. ✅ No manual code exists (all spec-driven)
-6. ✅ Specs fully explain the system
+5. ✅ No manual code exists (all spec-driven via Claude Code)
+6. ✅ Specs fully explain the system (constitution + spec + plan for each feature)
 7. ✅ Cross-user access returns 403
 8. ✅ Invalid JWT returns 401
 9. ✅ Frontend and backend decoupled
 10. ✅ Task CRUD logic reused from Phase I
+11. ✅ All features have PHRs demonstrating agentic workflow
+12. ✅ Significant decisions have ADRs
 
 ---
 
@@ -524,7 +615,9 @@ This constitution does NOT:
 - Introduce chatbot functionality (Phase III scope)
 - Change validation rules (inherited from Phase I)
 - Modify error messages for unchanged logic (inherited from Phase I)
+- Permit manual coding or ad-hoc implementation
+- Allow features without complete spec artifacts (constitution, spec, plan)
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-01-02 | **Last Amended**: 2026-01-02
+**Version**: 1.1.0 | **Ratified**: 2026-01-02 | **Last Amended**: 2026-01-09

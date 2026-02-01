@@ -24,14 +24,14 @@ This document breaks down the Backend API & Database feature into atomic, testab
 
 | Phase | User Story | Task Count | Parallel Tasks | Status |
 |-------|-----------|------------|----------------|--------|
-| Phase 1 | Setup | 8 | 0 | Pending |
-| Phase 2 | Foundational | 6 | 3 | Pending |
-| Phase 3 | US1 + US5 (P1) | 10 | 4 | Pending |
-| Phase 4 | US2 (P2) | 4 | 2 | Pending |
-| Phase 5 | US3 (P2) | 3 | 1 | Pending |
-| Phase 6 | US4 (P3) | 3 | 1 | Pending |
-| Phase 7 | Polish | 4 | 2 | Pending |
-| **Total** | | **38** | **13** | |
+| Phase 1 | Setup | 8 | 0 | ✅ Complete |
+| Phase 2 | Foundational | 6 | 3 | ✅ Complete |
+| Phase 3 | US1 + US5 (P1) | 10 | 4 | ✅ Complete |
+| Phase 4 | US2 (P2) | 4 | 2 | ✅ Complete |
+| Phase 5 | US3 (P2) | 3 | 1 | ✅ Complete |
+| Phase 6 | US4 (P3) | 3 | 1 | ✅ Complete |
+| Phase 7 | Polish | 4 | 2 | ✅ Complete |
+| **Total** | | **38** | **13** | ✅ **DONE** |
 
 ---
 
@@ -88,14 +88,14 @@ Complete all phases (1-7) for complete CRUD operations with filtering.
 
 ### Tasks
 
-- [ ] T001 Create Python virtual environment in backend/ directory using `python -m venv venv`
-- [ ] T002 Create backend/requirements.txt with dependencies: fastapi==0.109.0, sqlmodel==0.0.14, pydantic==2.5.0, uvicorn[standard]==0.27.0, psycopg2-binary==2.9.9, python-dotenv==1.0.0
-- [ ] T003 Create backend/config/.env.example with DATABASE_URL template and configuration variables
-- [ ] T004 Create backend/.env with actual Neon PostgreSQL connection string (DATABASE_URL=postgresql://...)
-- [ ] T005 Create project structure: backend/src/ with subdirectories (models/, schemas/, api/, services/, utils/)
-- [ ] T006 Create backend/src/__init__.py and all subdirectory __init__.py files for proper Python package structure
-- [ ] T007 Create backend/src/config.py to load environment variables using pydantic-settings BaseSettings pattern
-- [ ] T008 Install all dependencies with `pip install -r requirements.txt` and verify installation
+- [X] T001 Create Python virtual environment in backend/ directory using `python -m venv venv`
+- [X] T002 Create backend/requirements.txt with dependencies: fastapi==0.109.0, sqlmodel==0.0.14, pydantic==2.5.0, uvicorn[standard]==0.27.0, psycopg2-binary==2.9.9, python-dotenv==1.0.0
+- [X] T003 Create backend/config/.env.example with DATABASE_URL template and configuration variables
+- [X] T004 Create backend/.env with actual Neon PostgreSQL connection string (DATABASE_URL=postgresql://...)
+- [X] T005 Create project structure: backend/src/ with subdirectories (models/, schemas/, api/, services/, utils/)
+- [X] T006 Create backend/src/__init__.py and all subdirectory __init__.py files for proper Python package structure
+- [X] T007 Create backend/src/config.py to load environment variables using pydantic-settings BaseSettings pattern
+- [X] T008 Install all dependencies with `pip install -r requirements.txt` and verify installation
 
 ---
 
@@ -114,12 +114,12 @@ Complete all phases (1-7) for complete CRUD operations with filtering.
 
 ### Tasks
 
-- [ ] T009 [P] Create backend/src/database.py with SQLModel engine creation, session factory, and get_db dependency injection function
-- [ ] T010 [P] Create backend/src/models/task.py with Task SQLModel (table=True) including: id (UUID), user_id (str, indexed), title, description, status, priority, tags (ARRAY), created_at, updated_at
-- [ ] T011 [P] Create backend/src/utils/errors.py with custom exception classes: TaskError, TaskNotFoundError, UnauthorizedAccessError
-- [ ] T012 Create backend/src/main.py with FastAPI app initialization, CORS middleware, database lifecycle events (startup/shutdown)
-- [ ] T013 Add global exception handlers to backend/src/main.py for TaskError, RequestValidationError, and generic Exception (structured JSON errors per spec)
-- [ ] T014 Create database tables by running SQLModel.metadata.create_all(engine) in startup event or via python script
+- [X] T009 [P] Create backend/src/database.py with SQLModel engine creation, session factory, and get_db dependency injection function
+- [X] T010 [P] Create backend/src/models/task.py with Task SQLModel (table=True) including: id (UUID), user_id (str, indexed), title, description, status, priority, tags (ARRAY), created_at, updated_at
+- [X] T011 [P] Create backend/src/utils/errors.py with custom exception classes: TaskError, TaskNotFoundError, UnauthorizedAccessError
+- [X] T012 Create backend/src/main.py with FastAPI app initialization, CORS middleware, database lifecycle events (startup/shutdown)
+- [X] T013 Add global exception handlers to backend/src/main.py for TaskError, RequestValidationError, and generic Exception (structured JSON errors per spec)
+- [X] T014 Create database tables by running SQLModel.metadata.create_all(engine) in startup event or via python script
 
 ---
 
@@ -143,16 +143,16 @@ Complete all phases (1-7) for complete CRUD operations with filtering.
 
 ### Tasks
 
-- [ ] T015 [P] [US1] Create backend/src/schemas/task_schemas.py with TaskCreate schema (title required, description/status/priority/tags optional with defaults)
-- [ ] T016 [P] [US1] Create backend/src/schemas/task_schemas.py with TaskResponse schema (all fields from Task model, config for ORM mode)
-- [ ] T017 [P] [US1] Create backend/src/schemas/error_schemas.py with ErrorResponse schema (error object with code and message fields)
-- [ ] T018 [US5] Create backend/src/api/deps.py with get_user_id dependency function (extracts user_id from query parameter or header, validates non-empty)
-- [ ] T019 [US1] [US5] Create backend/src/services/task_service.py with TaskService class (constructor accepts db session and user_id, implements user-scoped query filtering)
-- [ ] T020 [US1] Implement TaskService.create_task() method in backend/src/services/task_service.py (validates input, sets user_id, generates UUID, saves to DB)
-- [ ] T021 [US5] Implement TaskService.list_tasks() method in backend/src/services/task_service.py with user_id filtering (WHERE user_id = ?)
-- [ ] T022 [US1] Create backend/src/api/routes/tasks.py with POST /api/tasks endpoint (uses get_user_id and get_db dependencies, calls TaskService.create_task)
-- [ ] T023 [US5] Add GET /api/tasks endpoint to backend/src/api/routes/tasks.py (uses get_user_id and get_db dependencies, calls TaskService.list_tasks with user_id filter)
-- [ ] T024 [US1] [US5] Register tasks router in backend/src/main.py with /api prefix and verify both endpoints return correct responses
+- [X] T015 [P] [US1] Create backend/src/schemas/task_schemas.py with TaskCreate schema (title required, description/status/priority/tags optional with defaults)
+- [X] T016 [P] [US1] Create backend/src/schemas/task_schemas.py with TaskResponse schema (all fields from Task model, config for ORM mode)
+- [X] T017 [P] [US1] Create backend/src/schemas/error_schemas.py with ErrorResponse schema (error object with code and message fields)
+- [X] T018 [US5] Create backend/src/api/deps.py with get_user_id dependency function (extracts user_id from query parameter or header, validates non-empty)
+- [X] T019 [US1] [US5] Create backend/src/services/task_service.py with TaskService class (constructor accepts db session and user_id, implements user-scoped query filtering)
+- [X] T020 [US1] Implement TaskService.create_task() method in backend/src/services/task_service.py (validates input, sets user_id, generates UUID, saves to DB)
+- [X] T021 [US5] Implement TaskService.list_tasks() method in backend/src/services/task_service.py with user_id filtering (WHERE user_id = ?)
+- [X] T022 [US1] Create backend/src/api/routes/tasks.py with POST /api/tasks endpoint (uses get_user_id and get_db dependencies, calls TaskService.create_task)
+- [X] T023 [US5] Add GET /api/tasks endpoint to backend/src/api/routes/tasks.py (uses get_user_id and get_db dependencies, calls TaskService.list_tasks with user_id filter)
+- [X] T024 [US1] [US5] Register tasks router in backend/src/main.py with /api prefix and verify both endpoints return correct responses
 
 **Acceptance Validation** (Manual Testing):
 ```bash
@@ -203,10 +203,10 @@ curl -X POST http://localhost:8000/api/tasks?user_id=alice \
 
 ### Tasks
 
-- [ ] T025 [P] [US2] Create TaskUpdate schema in backend/src/schemas/task_schemas.py (all fields optional, supports PATCH semantics)
-- [ ] T026 [P] [US2] Implement TaskService.get_task_by_id() method in backend/src/services/task_service.py with user_id verification (returns 403 if cross-user access)
-- [ ] T027 [US2] Implement TaskService.update_task() method in backend/src/services/task_service.py using model_dump(exclude_unset=True) for partial updates
-- [ ] T028 [US2] Add PATCH /api/tasks/{id} endpoint to backend/src/api/routes/tasks.py (validates UUID format, calls TaskService.update_task)
+- [X] T025 [P] [US2] Create TaskUpdate schema in backend/src/schemas/task_schemas.py (all fields optional, supports PATCH semantics)
+- [X] T026 [P] [US2] Implement TaskService.get_task_by_id() method in backend/src/services/task_service.py with user_id verification (returns 403 if cross-user access)
+- [X] T027 [US2] Implement TaskService.update_task() method in backend/src/services/task_service.py using model_dump(exclude_unset=True) for partial updates
+- [X] T028 [US2] Add PATCH /api/tasks/{id} endpoint to backend/src/api/routes/tasks.py (validates UUID format, calls TaskService.update_task)
 
 **Acceptance Validation** (Manual Testing):
 ```bash
@@ -252,9 +252,9 @@ curl -X PATCH http://localhost:8000/api/tasks/$TASK_ID?user_id=bob \
 
 ### Tasks
 
-- [ ] T029 [P] [US3] Implement TaskService.delete_task() method in backend/src/services/task_service.py with user_id verification and permanent deletion
-- [ ] T030 [US3] Add DELETE /api/tasks/{id} endpoint to backend/src/api/routes/tasks.py (validates UUID, calls TaskService.delete_task, returns 204 on success)
-- [ ] T031 [US3] Add error handling for TaskNotFoundError in DELETE endpoint (returns 404 with clear message if task doesn't exist)
+- [X] T029 [P] [US3] Implement TaskService.delete_task() method in backend/src/services/task_service.py with user_id verification and permanent deletion
+- [X] T030 [US3] Add DELETE /api/tasks/{id} endpoint to backend/src/api/routes/tasks.py (validates UUID, calls TaskService.delete_task, returns 204 on success)
+- [X] T031 [US3] Add error handling for TaskNotFoundError in DELETE endpoint (returns 404 with clear message if task doesn't exist)
 
 **Acceptance Validation** (Manual Testing):
 ```bash
@@ -301,9 +301,9 @@ curl -X DELETE http://localhost:8000/api/tasks/$BOB_TASK_ID?user_id=alice
 
 ### Tasks
 
-- [ ] T032 [P] [US4] Extend TaskService.list_tasks() method in backend/src/services/task_service.py to accept optional filter parameters (status, priority, tags, sort)
-- [ ] T033 [US4] Implement filtering logic in TaskService.list_tasks() using SQLModel select() with WHERE clauses for status, priority, and tags (PostgreSQL array contains)
-- [ ] T034 [US4] Update GET /api/tasks endpoint in backend/src/api/routes/tasks.py to accept optional query parameters (status, priority, tags comma-separated, sort)
+- [X] T032 [P] [US4] Extend TaskService.list_tasks() method in backend/src/services/task_service.py to accept optional filter parameters (status, priority, tags, sort)
+- [X] T033 [US4] Implement filtering logic in TaskService.list_tasks() using SQLModel select() with WHERE clauses for status, priority, and tags (PostgreSQL array contains)
+- [X] T034 [US4] Update GET /api/tasks endpoint in backend/src/api/routes/tasks.py to accept optional query parameters (status, priority, tags comma-separated, sort)
 
 **Acceptance Validation** (Manual Testing):
 ```bash
@@ -354,10 +354,10 @@ curl "http://localhost:8000/api/tasks?user_id=alice&sort=priority"
 
 ### Tasks
 
-- [ ] T035 [P] Add database indexes to backend/src/models/task.py using SQLModel Field(index=True) for user_id and status columns
-- [ ] T036 [P] Add Pydantic field validators to TaskCreate schema in backend/src/schemas/task_schemas.py (title not empty, description max 5000 chars, deduplicate tags)
-- [ ] T037 Add edge case handling to all endpoints: invalid UUID format (400), empty title (400), extremely long description (400), missing user_id (400)
-- [ ] T038 Update backend/README.md with setup instructions, API endpoint documentation, environment variable configuration, and example curl commands
+- [X] T035 [P] Add database indexes to backend/src/models/task.py using SQLModel Field(index=True) for user_id and status columns
+- [X] T036 [P] Add Pydantic field validators to TaskCreate schema in backend/src/schemas/task_schemas.py (title not empty, description max 5000 chars, deduplicate tags)
+- [X] T037 Add edge case handling to all endpoints: invalid UUID format (400), empty title (400), extremely long description (400), missing user_id (400)
+- [X] T038 Update backend/README.md with setup instructions, API endpoint documentation, environment variable configuration, and example curl commands
 
 ---
 

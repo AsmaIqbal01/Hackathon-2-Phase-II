@@ -1,4 +1,4 @@
-# Claude Code Rules – Phase II: Todo Full-Stack Web Application
+﻿# Claude Code Rules – Phase II: Todo Full-Stack Web Application
 
 ## Project Overview
 
@@ -851,7 +851,7 @@ Phase II is complete when:
 ## Version Control & Governance
 
 **Version**: 1.0.0 (Phase II)
-**Last Updated**: 2026-01-09
+**Last Updated**: 2026-01-30
 
 **Amendment Process**:
 1. Identify need for amendment

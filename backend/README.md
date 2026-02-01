@@ -1,8 +1,10 @@
 # Backend – FastAPI + SQLModel + Neon PostgreSQL
 
-**Phase II Full-Stack Web Application Backend**
+**Phase II Full-Stack Web Application Backend – Spec F01-S01**
 
 This is the backend REST API for the Evolution of Todo Phase II project, built with FastAPI, SQLModel ORM, and Neon Serverless PostgreSQL.
+
+> **Note**: This is F01-S01 (Backend API & Database). Authentication via JWT will be added in Spec F01-S02.
 
 ---
 
@@ -10,16 +12,11 @@ This is the backend REST API for the Evolution of Todo Phase II project, built w
 
 - [Overview](#overview)
 - [Technology Stack](#technology-stack)
-- [Features](#features)
+- [Quick Start](#quick-start)
+- [API Endpoints](#api-endpoints)
 - [Project Structure](#project-structure)
-- [Setup](#setup)
 - [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [Authentication](#authentication)
-- [Database](#database)
 - [Testing](#testing)
-- [Deployment](#deployment)
 
 ---
 
@@ -27,8 +24,8 @@ This is the backend REST API for the Evolution of Todo Phase II project, built w
 
 The backend provides:
 
-- **RESTful API** endpoints for task management
-- **JWT-based authentication** (verifies tokens from Better Auth)
+- **RESTful API** endpoints for task CRUD operations
+- **Temporary user_id parameter** (will be replaced by JWT in Spec 2)
 - **User-scoped data access** (each user can only access their own tasks)
 - **Input validation** with Pydantic models
 - **PostgreSQL persistence** via Neon Serverless
@@ -38,16 +35,101 @@ The backend provides:
 
 ## Technology Stack
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Framework | **FastAPI** | High-performance async web framework |
-| ORM | **SQLModel** | Type-safe database operations |
-| Database | **Neon PostgreSQL** | Serverless managed PostgreSQL |
-| Authentication | **JWT** | Stateless token verification |
-| Validation | **Pydantic** | Request/response validation |
-| Migrations | **Alembic** | Database schema version control |
-| Password Hashing | **bcrypt** | Secure password storage |
-| Testing | **pytest** | Unit and integration tests |
+| Component | Technology | Version | Purpose |
+|-----------|-----------|---------|---------|
+| Framework | **FastAPI** | 0.109.0 | High-performance web framework |
+| ORM | **SQLModel** | 0.0.14 | Type-safe database operations |
+| Database | **Neon PostgreSQL** | Serverless | Managed PostgreSQL |
+| Validation | **Pydantic** | 2.5.0 | Request/response validation |
+| Server | **uvicorn** | 0.27.0 | ASGI server |
+
+---
+
+## Quick Start
+
+```bash
+# 1. Navigate to backend directory
+cd backend
+
+# 2. Create virtual environment
+python -m venv venv
+
+# 3. Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# 4. Install dependencies
+pip install -r requirements.txt
+
+# 5. Configure environment
+cp config/.env.example .env
+# Edit .env with your Neon PostgreSQL connection string:
+# DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+
+# 6. Run the server
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**API Documentation**: http://localhost:8000/docs
+
+---
+
+## API Endpoints
+
+All endpoints require `user_id` as query parameter or `X-User-ID` header.
+
+### Task CRUD Operations
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| POST | `/api/tasks?user_id=xxx` | Create task | 201 |
+| GET | `/api/tasks?user_id=xxx` | List user's tasks | 200 |
+| GET | `/api/tasks/{id}?user_id=xxx` | Get task by ID | 200/403/404 |
+| PATCH | `/api/tasks/{id}?user_id=xxx` | Update task | 200/403/404 |
+| DELETE | `/api/tasks/{id}?user_id=xxx` | Delete task | 204/403/404 |
+
+### Example Requests
+
+```bash
+# Create a task
+curl -X POST "http://localhost:8000/api/tasks?user_id=alice" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Buy groceries", "priority": "high", "tags": ["shopping"]}'
+
+# List tasks
+curl "http://localhost:8000/api/tasks?user_id=alice"
+
+# List with filters
+curl "http://localhost:8000/api/tasks?user_id=alice&status=todo&priority=high"
+
+# Update task
+curl -X PATCH "http://localhost:8000/api/tasks/{task_id}?user_id=alice" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "completed"}'
+
+# Delete task
+curl -X DELETE "http://localhost:8000/api/tasks/{task_id}?user_id=alice"
+```
+
+### Error Responses
+
+```json
+{
+  "error": {
+    "code": 400,
+    "message": "user_id is required"
+  }
+}
+```
+
+| Code | Meaning |
+|------|---------|
+| 400 | Bad Request (validation error, missing user_id) |
+| 403 | Forbidden (cross-user access attempt) |
+| 404 | Not Found (task doesn't exist) |
+| 500 | Internal Server Error |
 
 ---
 

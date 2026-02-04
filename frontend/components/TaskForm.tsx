@@ -1,83 +1,83 @@
-// T024, T025, T026, T027, T028: TaskForm component with validation and submission
+// T013: TaskForm with cyberpunk styling and toast notifications
 
-'use client';
+'use client'
 
-import { useState, FormEvent } from 'react';
-import { apiClient } from '@/lib/api';
-import { Task, CreateTaskInput } from '@/lib/types';
+import { useState, FormEvent } from 'react'
+import toast from 'react-hot-toast'
+import { apiClient } from '@/lib/api'
+import { Task, CreateTaskInput } from '@/lib/types'
+import NeonInput from '@/components/ui/NeonInput'
+import NeonButton from '@/components/ui/NeonButton'
 
 interface TaskFormProps {
-  onTaskCreated: () => void;
+  onTaskCreated: () => void
 }
 
 export default function TaskForm({ onTaskCreated }: TaskFormProps) {
-  const [title, setTitle] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // T026: Form submission with POST /api/tasks
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
 
-    // T025: Client-side validation - required title
+    // Client-side validation
     if (!title.trim()) {
-      setError('Title is required');
-      return;
+      const message = 'Title is required'
+      setError(message)
+      toast.error(message)
+      return
     }
 
-    setSubmitting(true);
+    setSubmitting(true)
 
     try {
       const taskInput: CreateTaskInput = {
         title: title.trim(),
-      };
+      }
 
-      // T026: POST /api/tasks
       await apiClient<Task>('/tasks', {
         method: 'POST',
         body: JSON.stringify(taskInput),
-      });
+      })
 
-      // T027: Update list state after successful creation
-      setTitle(''); // Clear form
-      onTaskCreated(); // Trigger parent to refresh task list
+      // Clear form and show success
+      setTitle('')
+      toast.success('Task created')
+      onTaskCreated()
     } catch (err) {
-      // T028: Error handling
-      setError(err instanceof Error ? err.message : 'Failed to create task');
+      const message = err instanceof Error ? err.message : 'Failed to create task'
+      setError(message)
+      toast.error(message)
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="mb-6">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1">
-          <input
+          <NeonInput
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter task title..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={submitting}
+            error={error || undefined}
           />
         </div>
-        <button
+        <NeonButton
           type="submit"
+          variant="primary"
+          loading={submitting}
           disabled={submitting}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="sm:w-auto w-full"
         >
           {submitting ? 'Adding...' : 'Add Task'}
-        </button>
+        </NeonButton>
       </form>
-
-      {/* T028: Error display */}
-      {error && (
-        <div className="mt-2 p-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
-          {error}
-        </div>
-      )}
     </div>
-  );
+  )
 }

@@ -1,112 +1,153 @@
-// T020, T029, T030, T031, T032: TaskItem with toggle status functionality
+// T014: TaskItem with cyberpunk styling, confirmation modal, and toasts
 
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Task, TaskStatus } from '@/lib/types';
-import { apiClient } from '@/lib/api';
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { Task, TaskStatus } from '@/lib/types'
+import { apiClient } from '@/lib/api'
+import NeonButton from '@/components/ui/NeonButton'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 interface TaskItemProps {
-  task: Task;
-  onUpdate: () => void;
+  task: Task
+  onUpdate: () => void
 }
 
 export default function TaskItem({ task, onUpdate }: TaskItemProps) {
-  const [toggling, setToggling] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [toggling, setToggling] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  // T030: Toggle status with PATCH /api/tasks/{id}
+  // Toggle status
   const handleToggleStatus = async () => {
-    setToggling(true);
+    setToggling(true)
 
     try {
-      // Determine new status
       const newStatus: TaskStatus =
-        task.status === 'completed' ? 'todo' : 'completed';
+        task.status === 'completed' ? 'todo' : 'completed'
 
-      // T030: PATCH request
       await apiClient(`/tasks/${task.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
-      });
+      })
 
-      // T031: Update list state after successful toggle
-      onUpdate();
+      toast.success(newStatus === 'completed' ? 'Task completed' : 'Task reopened')
+      onUpdate()
     } catch (err) {
-      console.error('Failed to toggle task:', err);
+      const message = err instanceof Error ? err.message : 'Failed to update task'
+      toast.error(message)
     } finally {
-      setToggling(false);
+      setToggling(false)
     }
-  };
+  }
 
-  // T034: Delete task with DELETE /api/tasks/{id}
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this task?')) {
-      return;
-    }
-
-    setDeleting(true);
+  // Execute delete (called from modal confirmation)
+  const executeDelete = async () => {
+    setDeleting(true)
 
     try {
-      // T034: DELETE request
       await apiClient(`/tasks/${task.id}`, {
         method: 'DELETE',
-      });
+      })
 
-      // T035: Remove from list state after successful deletion
-      onUpdate();
+      toast.success('Task deleted')
+      onUpdate()
     } catch (err) {
-      console.error('Failed to delete task:', err);
+      const message = err instanceof Error ? err.message : 'Failed to delete task'
+      toast.error(message)
     } finally {
-      setDeleting(false);
+      setDeleting(false)
     }
-  };
+  }
+
+  // Status badge styles
+  const getStatusStyles = () => {
+    switch (task.status) {
+      case 'completed':
+        return 'bg-neon-green/20 text-neon-green border-neon-green/30'
+      case 'in-progress':
+        return 'bg-neon-yellow/20 text-neon-yellow border-neon-yellow/30'
+      default:
+        return 'bg-neon-purple/20 text-neon-purple border-neon-purple/30'
+    }
+  }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <h3 className="font-medium text-gray-900">{task.title}</h3>
-          {task.description && (
-            <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-          )}
-          <div className="flex items-center gap-2 mt-2">
-            <span
-              className={`inline-block px-2 py-1 text-xs rounded ${
-                task.status === 'completed'
-                  ? 'bg-green-100 text-green-800'
-                  : task.status === 'in-progress'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {task.status}
-            </span>
-            {task.priority && (
-              <span className="text-xs text-gray-500">Priority: {task.priority}</span>
+    <>
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2 }}
+        className="bg-cyber-surface border border-cyber-border rounded-lg p-4 hover:border-neon-purple/50 hover:shadow-glow-purple transition-all duration-150"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          {/* Task content */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-cyber-text truncate" title={task.title}>
+              {task.title}
+            </h3>
+            {task.description && (
+              <p className="text-sm text-cyber-text-muted mt-1 line-clamp-2">
+                {task.description}
+              </p>
             )}
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span
+                className={`inline-block px-2 py-1 text-xs rounded border ${getStatusStyles()}`}
+              >
+                {task.status}
+              </span>
+              {task.priority && (
+                <span className="text-xs text-cyber-text-muted">
+                  Priority: <span className="text-neon-blue">{task.priority}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <NeonButton
+              variant="secondary"
+              size="sm"
+              onClick={handleToggleStatus}
+              loading={toggling}
+              disabled={toggling || deleting}
+            >
+              {task.status === 'completed' ? 'Undo' : 'Complete'}
+            </NeonButton>
+
+            <NeonButton
+              variant="danger"
+              size="sm"
+              onClick={() => setShowDeleteModal(true)}
+              loading={deleting}
+              disabled={toggling || deleting}
+            >
+              Delete
+            </NeonButton>
           </div>
         </div>
+      </motion.div>
 
-        <div className="flex items-center gap-2">
-          {/* T029: Toggle button, T032: Loading state */}
-          <button
-            onClick={handleToggleStatus}
-            disabled={toggling || deleting}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {toggling ? '...' : task.status === 'completed' ? 'Undo' : 'Complete'}
-          </button>
-
-          {/* T033: Delete button, T036: Loading state */}
-          <button
-            onClick={handleDelete}
-            disabled={toggling || deleting}
-            className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {deleting ? '...' : 'Delete'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          setShowDeleteModal(false)
+          executeDelete()
+        }}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+    </>
+  )
 }

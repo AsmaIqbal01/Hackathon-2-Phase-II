@@ -1,115 +1,140 @@
-// T011, T013, T014, T015: Register page with form submission and error handling
+// T011: Register page with full cyberpunk styling
 
-'use client';
+'use client'
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/api';
-import { setToken } from '@/lib/auth';
-import { AuthResponse } from '@/lib/types';
-import Link from 'next/link';
+import { useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import toast from 'react-hot-toast'
+import { apiClient } from '@/lib/api'
+import { setToken } from '@/lib/auth'
+import { AuthResponse } from '@/lib/types'
+import BlobBackground from '@/components/ui/BlobBackground'
+import NeonInput from '@/components/ui/NeonInput'
+import NeonButton from '@/components/ui/NeonButton'
+import PageTransition from '@/components/ui/PageTransition'
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  // T013: Register form submission
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
 
     // Basic validation
     if (!email || !password) {
-      setError('Email and password are required');
-      return;
+      const message = 'Email and password are required'
+      setError(message)
+      toast.error(message)
+      return
     }
 
-    setSubmitting(true);
+    setSubmitting(true)
 
     try {
-      // T013: POST /api/auth/register
       const response = await apiClient<AuthResponse>('/auth/register', {
         method: 'POST',
         requiresAuth: false,
         body: JSON.stringify({ email, password }),
-      });
+      })
 
-      // Auto-login: store token and redirect
-      setToken(response.access_token);
-      router.push('/dashboard');
+      // Auto-login: store token and show success toast
+      setToken(response.access_token)
+      toast.success('Account created successfully')
+      router.push('/dashboard')
     } catch (err) {
-      // T014: Error handling (409 for duplicate email, etc.)
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      const message = err instanceof Error ? err.message : 'Registration failed'
+      setError(message)
+      toast.error(message)
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white shadow-md rounded-lg px-8 py-8">
-          <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
-
-          {/* T014: Error display */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={submitting}
-                required
+    <>
+      <BlobBackground />
+      <PageTransition>
+        <div className="flex min-h-screen items-center justify-center px-4 sm:px-6">
+          <div className="w-full max-w-md relative z-10">
+            {/* Cyberpunk card */}
+            <div className="bg-cyber-surface/80 backdrop-blur-md border border-cyber-border rounded-lg px-6 py-8 sm:px-8 shadow-lg">
+              {/* Subtle glow effect */}
+              <div
+                className="absolute inset-0 rounded-lg pointer-events-none"
+                style={{
+                  boxShadow: '0 0 40px rgba(180, 77, 255, 0.1), inset 0 0 40px rgba(180, 77, 255, 0.02)',
+                }}
               />
+
+              <div className="relative">
+                <h1 className="font-heading text-2xl font-bold text-neon-purple text-center mb-6 uppercase tracking-wider text-glow-purple">
+                  Register
+                </h1>
+
+                {/* Error display */}
+                {error && (
+                  <div className="mb-4 p-3 bg-neon-red/10 border border-neon-red/30 text-neon-red rounded-md text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <NeonInput
+                    id="email"
+                    type="email"
+                    label="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={submitting}
+                    required
+                    placeholder="Enter your email"
+                    autoComplete="email"
+                  />
+
+                  <NeonInput
+                    id="password"
+                    type="password"
+                    label="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={submitting}
+                    required
+                    placeholder="Create a password"
+                    autoComplete="new-password"
+                  />
+
+                  <div className="pt-2">
+                    <NeonButton
+                      type="submit"
+                      variant="primary"
+                      loading={submitting}
+                      disabled={submitting}
+                      className="w-full"
+                    >
+                      {submitting ? 'Creating account...' : 'Register'}
+                    </NeonButton>
+                  </div>
+                </form>
+
+                <p className="mt-6 text-center text-sm text-cyber-text-muted">
+                  Already have an account?{' '}
+                  <Link
+                    href="/login"
+                    className="text-neon-purple hover:text-neon-pink transition-colors duration-150"
+                  >
+                    Login
+                  </Link>
+                </p>
+              </div>
             </div>
-
-            <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={submitting}
-                required
-              />
-            </div>
-
-            {/* T015: Loading state */}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Registering...' : 'Register'}
-            </button>
-          </form>
-
-          <p className="mt-4 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 hover:underline">
-              Login
-            </Link>
-          </p>
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      </PageTransition>
+    </>
+  )
 }

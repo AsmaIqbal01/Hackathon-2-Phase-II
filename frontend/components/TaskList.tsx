@@ -1,50 +1,57 @@
-// T019, T021, T022, T023: TaskList component with loading/error/empty states
+// T015: TaskList with cyberpunk styling, skeleton loaders, and animations
 
-import { Task } from '@/lib/types';
-import TaskItem from './TaskItem';
+'use client'
+
+import { AnimatePresence } from 'framer-motion'
+import { Task } from '@/lib/types'
+import TaskItem from './TaskItem'
+import SkeletonCard from '@/components/ui/SkeletonCard'
 
 interface TaskListProps {
-  tasks: Task[];
-  loading: boolean;
-  error: string | null;
-  onTaskUpdate: () => void;
+  tasks: Task[]
+  loading: boolean
+  error: string | null
+  onTaskUpdate: () => void
 }
 
 export default function TaskList({ tasks, loading, error, onTaskUpdate }: TaskListProps) {
-  // T021: Loading state
+  // Loading state with skeleton cards
   if (loading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Loading tasks...</p>
-      </div>
-    );
+    return <SkeletonCard count={3} />
   }
 
-  // T023: Error state
+  // Error state with cyberpunk styling
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 rounded p-4">
-        <p className="font-medium">Error loading tasks</p>
-        <p className="text-sm mt-1">{error}</p>
+      <div className="bg-neon-red/10 border border-neon-red/30 rounded-lg p-4">
+        <p className="font-heading text-neon-red font-medium uppercase tracking-wider">
+          Error loading tasks
+        </p>
+        <p className="text-sm text-cyber-text-muted mt-1">{error}</p>
       </div>
-    );
+    )
   }
 
-  // T022: Empty state
+  // Empty state with cyberpunk styling
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-8 bg-gray-50 rounded border border-gray-200">
-        <p className="text-gray-500">No tasks yet. Create your first task above!</p>
+      <div className="text-center py-8 bg-cyber-surface border border-cyber-border rounded-lg">
+        <p className="text-cyber-text-muted">
+          No tasks yet.{' '}
+          <span className="text-neon-blue">Create your first task above!</span>
+        </p>
       </div>
-    );
+    )
   }
 
-  // Task list
+  // Task list with animated entries/exits
   return (
-    <div className="space-y-2">
-      {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} onUpdate={onTaskUpdate} />
-      ))}
+    <div className="space-y-3">
+      <AnimatePresence mode="popLayout">
+        {tasks.map((task) => (
+          <TaskItem key={task.id} task={task} onUpdate={onTaskUpdate} />
+        ))}
+      </AnimatePresence>
     </div>
-  );
+  )
 }

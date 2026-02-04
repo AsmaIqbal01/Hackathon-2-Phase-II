@@ -69,7 +69,6 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
 # Project specific
-backend/config/.env
 backend/.env
 frontend/.env.local
 frontend/.env.production.local
@@ -77,4 +76,3 @@ frontend/.env.development.local
 
 # Local database files (development only)
 *.db
-backend/todo.db

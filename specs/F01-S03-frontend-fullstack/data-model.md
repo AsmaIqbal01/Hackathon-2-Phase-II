@@ -1,26 +1,28 @@
-# Data Model: Frontend Application
+# Data Model: Frontend Application (Minimal)
 
 **Feature**: F01-S03-frontend-fullstack
-**Date**: 2026-01-30
+**Date**: 2026-02-01
+**Scope**: Minimal hackathon integration proof
 
 ## Frontend Types
 
 ### Task
 
-Derived from Spec 1 Task entity (FR-005, FR-006, FR-007).
+Derived from Spec 1 Task entity.
 
 ```typescript
-// types/task.ts
+// lib/types.ts
+
 export type TaskStatus = 'todo' | 'in-progress' | 'completed';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
 export interface Task {
   id: string;           // UUID from backend
-  title: string;        // required, max 255 chars
-  description?: string; // optional, max 5000 chars
-  status: TaskStatus;   // required, default 'todo'
-  priority: TaskPriority; // required, default 'medium'
-  tags?: string[];      // optional
+  title: string;        // required
+  description?: string; // optional
+  status: TaskStatus;   // required
+  priority?: TaskPriority;
+  tags?: string[];
   created_at: string;   // ISO 8601
   updated_at: string;   // ISO 8601
 }
@@ -28,15 +30,6 @@ export interface Task {
 export interface CreateTaskInput {
   title: string;        // required
   description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  tags?: string[];
-}
-
-export interface UpdateTaskInput {
-  title?: string;
-  description?: string;
-  status?: TaskStatus;
   priority?: TaskPriority;
   tags?: string[];
 }
@@ -44,117 +37,78 @@ export interface UpdateTaskInput {
 
 ### User
 
-Derived from Spec 2 JWT claims (FR-009).
+Derived from Spec 2 auth response.
 
 ```typescript
-// types/user.ts
 export interface User {
-  id: string;    // UUID from JWT 'sub' claim
-  email: string; // from JWT 'email' claim
+  id: string;    // UUID
+  email: string;
 }
 ```
 
-### Auth State
+### Auth Response
 
-Frontend auth context shape.
+Response from login/register endpoints.
 
 ```typescript
-// types/auth.ts
-export interface AuthState {
-  user: User | null;
-  accessToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
-export interface LoginInput {
-  email: string;
-  password: string;
-}
-
-export interface RegisterInput {
-  email: string;
-  password: string;
-}
-
-export interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-  token_type: 'bearer';
-  expires_in: number; // seconds
-}
-
 export interface AuthResponse {
   user: User;
   access_token: string;
-  refresh_token: string;
-  token_type: 'bearer';
+  refresh_token: string;  // Not used in minimal scope
+  token_type: string;
   expires_in: number;
 }
 ```
 
 ### API Error
 
-Aligned with Spec 1 (FR-025) and Spec 2 (FR-030).
+Error response structure from backend.
 
 ```typescript
-// types/api.ts
-export interface ApiErrorDetail {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-}
-
 export interface ApiErrorResponse {
-  error: ApiErrorDetail;
-}
-
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-    public details?: Record<string, unknown>
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
+  error: {
+    code: number | string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
 }
 ```
 
 ---
 
-## State Shapes
+## Component State Shapes
 
-### Auth Context State
+### Dashboard Page State
 
 ```typescript
-interface AuthContextValue {
-  // State
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-
-  // Actions
-  login: (input: LoginInput) => Promise<void>;
-  register: (input: RegisterInput) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<boolean>;
+// Local state in dashboard/page.tsx
+interface DashboardState {
+  tasks: Task[];
+  loading: boolean;
+  error: string | null;
 }
 ```
 
-### Task List State (Component-local)
+### Task Form State
 
 ```typescript
-interface TaskListState {
-  tasks: Task[];
-  isLoading: boolean;
-  error: ApiError | null;
-}
-
+// Local state in TaskForm.tsx
 interface TaskFormState {
-  isSubmitting: boolean;
-  error: ApiError | null;
+  title: string;
+  submitting: boolean;
+  error: string | null;
+}
+```
+
+### Login/Register Form State
+
+```typescript
+// Local state in login/page.tsx and register/page.tsx
+interface AuthFormState {
+  email: string;
+  password: string;
+  submitting: boolean;
+  error: string | null;
 }
 ```
 
@@ -162,39 +116,22 @@ interface TaskFormState {
 
 ## Validation Rules (Client-side)
 
-Per FR-029: inline validation before submission.
+Minimal validation per spec FR-017.
 
 | Field | Rule | Error Message |
 |-------|------|---------------|
-| `title` | Required, non-empty | "Title is required" |
-| `title` | Max 255 chars | "Title must be 255 characters or less" |
-| `email` | Required, valid format | "Valid email is required" |
-| `password` | Required, min 8 chars | "Password must be at least 8 characters" |
+| `title` (task) | Required, non-empty | "Title is required" |
+| `email` (auth) | Required | "Email is required" |
+| `password` (auth) | Required | "Password is required" |
 
-Note: Business rule validation (status transitions, tag uniqueness) deferred to backend (Spec 1 authority).
-
----
-
-## Entity Relationships
-
-```
-User (from JWT)
-  └── owns → Task[] (filtered by backend)
-
-AuthState
-  └── contains → User | null
-  └── contains → accessToken | null
-
-TaskListState
-  └── contains → Task[]
-```
+Note: All other validation (email format, password strength, status transitions) deferred to backend.
 
 ---
 
 ## No Local Persistence
 
-Per spec assumptions:
-- No offline support required
-- No local storage of tasks
-- Access token in memory only
-- Refresh token via httpOnly cookie (handled by Better Auth)
+Per minimal scope:
+- Access token in localStorage (cleared on logout/401)
+- No task caching
+- No offline support
+- No refresh token handling

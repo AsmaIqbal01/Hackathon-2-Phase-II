@@ -1,11 +1,12 @@
-# API Client Contract
+# API Client Contract (Minimal)
 
 **Feature**: F01-S03-frontend-fullstack
-**Date**: 2026-01-30
+**Date**: 2026-02-01
+**Scope**: Minimal hackathon integration proof
 
 ## Overview
 
-Frontend API client consumes backend endpoints defined in Spec 1 and Spec 2. This document specifies the client-side contract.
+Frontend API client consumes backend endpoints defined in Spec 1 and Spec 2. This document specifies the client-side contract for the minimal scope.
 
 ## Base Configuration
 
@@ -13,12 +14,12 @@ Frontend API client consumes backend endpoints defined in Spec 1 and Spec 2. Thi
 // Environment
 const API_URL = process.env.NEXT_PUBLIC_API_URL; // Required
 
-// Headers (all requests)
+// Default headers
 {
   'Content-Type': 'application/json'
 }
 
-// Headers (authenticated requests)
+// Authenticated request headers
 {
   'Content-Type': 'application/json',
   'Authorization': 'Bearer <access_token>'
@@ -27,34 +28,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL; // Required
 
 ---
 
-## Auth Endpoints (Spec 2 Reference)
-
-### POST /api/auth/register
-
-**Request**:
-```typescript
-{
-  email: string;    // required, valid email format
-  password: string; // required, min 8 chars
-}
-```
-
-**Success (201)**:
-```typescript
-{
-  user: { id: string; email: string; created_at: string; };
-  access_token: string;
-  refresh_token: string;
-  token_type: 'bearer';
-  expires_in: number;
-}
-```
-
-**Errors**:
-- 400: Invalid email format or weak password
-- 409: Email already registered
-
----
+## Auth Endpoints
 
 ### POST /api/auth/login
 
@@ -71,81 +45,73 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL; // Required
 {
   user: { id: string; email: string; };
   access_token: string;
-  refresh_token: string;
+  refresh_token: string;  // Not used in minimal scope
   token_type: 'bearer';
   expires_in: number;
 }
 ```
 
+**Frontend Action**: Store `access_token` in localStorage.
+
 **Errors**:
-- 401: Invalid credentials
-- 429: Rate limit exceeded
+- 401: Invalid credentials → Display "Invalid email or password"
 
 ---
 
-### POST /api/auth/logout
-
-**Headers**: `Authorization: Bearer <access_token>`
-
-**Request**: None
-
-**Success (204)**: No content
-
-**Errors**:
-- 401: Invalid or missing token
-
----
-
-### POST /api/auth/refresh
+### POST /api/auth/register
 
 **Request**:
 ```typescript
 {
-  refresh_token: string;
+  email: string;
+  password: string;
 }
 ```
 
-**Success (200)**:
+**Success (201)**:
 ```typescript
 {
+  user: { id: string; email: string; };
   access_token: string;
-  refresh_token: string;
+  refresh_token: string;  // Not used
   token_type: 'bearer';
   expires_in: number;
 }
 ```
 
+**Frontend Action**: Store `access_token` in localStorage, redirect to /dashboard.
+
 **Errors**:
-- 401: Invalid or expired refresh token
+- 400: Invalid input → Display error message
+- 409: Email exists → Display "Email already registered"
 
 ---
 
-## Task Endpoints (Spec 1 Reference)
+## Task Endpoints
+
+All task endpoints require `Authorization: Bearer <token>` header.
 
 ### GET /api/tasks
 
-**Headers**: `Authorization: Bearer <access_token>`
-
 **Success (200)**:
 ```typescript
-Task[] // Array of tasks owned by authenticated user
+Task[]  // Array of user's tasks
 ```
 
+**Frontend Action**: Display in TaskList component.
+
 **Errors**:
-- 401: Missing or invalid token
+- 401: Unauthorized → Clear token, redirect to /login
 
 ---
 
 ### POST /api/tasks
-
-**Headers**: `Authorization: Bearer <access_token>`
 
 **Request**:
 ```typescript
 {
   title: string;        // required
   description?: string;
-  status?: 'todo' | 'in-progress' | 'completed';
   priority?: 'low' | 'medium' | 'high';
   tags?: string[];
 }
@@ -153,109 +119,82 @@ Task[] // Array of tasks owned by authenticated user
 
 **Success (201)**:
 ```typescript
-Task // Created task with id, timestamps
+Task  // Created task with id
 ```
 
+**Frontend Action**: Add to task list, clear form.
+
 **Errors**:
-- 400: Validation error (missing title, invalid enum)
-- 401: Missing or invalid token
+- 400: Validation error → Display inline
+- 401: Unauthorized → Redirect to /login
 
 ---
 
 ### PATCH /api/tasks/{id}
 
-**Headers**: `Authorization: Bearer <access_token>`
-
 **Request**:
 ```typescript
 {
   title?: string;
-  description?: string;
   status?: 'todo' | 'in-progress' | 'completed';
   priority?: 'low' | 'medium' | 'high';
-  tags?: string[];
 }
 ```
 
 **Success (200)**:
 ```typescript
-Task // Updated task
+Task  // Updated task
 ```
 
+**Frontend Action**: Update task in list.
+
 **Errors**:
-- 400: Validation error
-- 401: Missing or invalid token
-- 403: Task not owned by user
-- 404: Task not found
+- 401: Unauthorized → Redirect to /login
+- 403: Not owner → Display "Access denied"
+- 404: Not found → Display "Task not found"
 
 ---
 
 ### DELETE /api/tasks/{id}
 
-**Headers**: `Authorization: Bearer <access_token>`
-
 **Success (204)**: No content
 
+**Frontend Action**: Remove task from list.
+
 **Errors**:
-- 401: Missing or invalid token
-- 403: Task not owned by user
-- 404: Task not found
+- 401: Unauthorized → Redirect to /login
+- 403: Not owner → Display "Access denied"
+- 404: Not found → Display "Task not found"
 
 ---
 
-## Error Handling Contract
+## Error Handling (Simplified)
 
-All errors follow this structure (per Spec 1 FR-025, Spec 2 FR-030):
-
-```typescript
-{
-  error: {
-    code: string;    // e.g., "VALIDATION_ERROR", "UNAUTHORIZED"
-    message: string; // User-friendly message
-    details?: {      // Optional field-level details
-      field?: string;
-      constraint?: string;
-    };
-  }
-}
-```
-
-### Frontend Error Handling Rules
-
-| Status | Action |
-|--------|--------|
-| 401 | Attempt token refresh; if fails, redirect to /login |
-| 403 | Display "Access denied" inline; no redirect |
-| 404 | Display "Not found" inline |
-| 400 | Display validation error inline |
-| 5xx | Display "Service unavailable" generic message |
-
----
-
-## Request Flow
-
-```
-User Action
-    ↓
-Frontend validates (client-side)
-    ↓
-API Client attaches JWT
-    ↓
-Backend validates (server-side)
-    ↓
-Response
-    ↓
-  ┌─ 2xx: Update UI state
-  ├─ 401: Refresh → Retry OR Redirect
-  ├─ 403: Show access denied
-  └─ 4xx/5xx: Show error inline
-```
+| Status | Frontend Action |
+|--------|-----------------|
+| 401 | Clear localStorage token, redirect to /login |
+| 403 | Display "Access denied" message |
+| 400/422 | Display error message inline |
+| 404 | Display "Not found" message |
+| 5xx | Display "Service unavailable" |
+| Network error | Display "Network error" |
 
 ---
 
 ## No user_id in Requests
 
-Per spec FR-007 and constitution principle IV:
+Per spec FR-007:
 - Frontend NEVER sends `user_id` parameter
 - Backend extracts user identity from JWT
-- This contract enforces that constraint
+- All task operations scoped to authenticated user
+
+---
+
+## Not Implemented (Minimal Scope)
+
+The following are NOT implemented:
+
+- POST /api/auth/logout (token cleared client-side only)
+- POST /api/auth/refresh (user re-logins on expiry)
+- Token refresh retry logic
+- Request queuing during refresh

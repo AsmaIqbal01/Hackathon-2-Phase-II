@@ -1,60 +1,93 @@
-# Research: Frontend Application & Full-Stack Integration
+# Research: Frontend Application & Full-Stack Integration (Minimal)
 
 **Feature**: F01-S03-frontend-fullstack
-**Date**: 2026-01-30
+**Date**: 2026-02-01
 **Status**: Complete
+**Scope**: Minimal hackathon integration proof
 
 ## Research Questions
 
-### Q1: Better Auth Integration Pattern
+### Q1: Authentication Approach
 
-**Decision**: Use Better Auth's React SDK with Next.js App Router.
+**Decision**: Simple localStorage token storage with manual header injection.
 
 **Rationale**:
-- Better Auth provides official Next.js adapter
-- Handles token storage (memory for access, httpOnly cookie for refresh)
-- Built-in session management compatible with App Router
-- Reduces custom auth code
+- Minimal scope requires simplest possible solution
+- localStorage is acceptable for hackathon demonstration
+- No token refresh means no complex token management
+- Reduces dependencies (no Better Auth SDK needed)
+
+**Pattern**:
+```typescript
+// lib/auth.ts
+const TOKEN_KEY = 'access_token';
+
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+```
 
 **Alternatives Considered**:
-- Custom JWT handling: More control but duplicates existing solution
-- NextAuth.js: Mature but heavier; Better Auth specified in project constitution
+- Better Auth: Full-featured but adds complexity beyond minimal scope
+- httpOnly cookies: More secure but requires server-side handling
+- Session storage: Cleared on tab close; less convenient for demo
+
+**Tradeoff Documented**: localStorage is vulnerable to XSS. Acceptable for hackathon; production would use httpOnly cookies.
 
 ---
 
 ### Q2: API Client Architecture
 
-**Decision**: Single `api-client.ts` module with automatic token injection and refresh.
+**Decision**: Single `api.ts` module with fetch wrapper.
 
 **Rationale**:
-- Centralized error handling (401 → refresh → retry)
-- Single point of JWT header injection
-- Consistent response parsing
-- Testable in isolation
+- Native fetch sufficient for minimal scope
+- No axios/tanstack-query dependencies
+- Centralized JWT header injection
+- Simple error handling (no retry logic)
 
 **Pattern**:
 ```typescript
-// lib/api-client.ts
+// lib/api.ts
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function apiClient<T>(
   endpoint: string,
-  options?: RequestInit
+  options: RequestInit = {}
 ): Promise<T> {
-  const token = getAccessToken();
+  const token = getToken();
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...options?.headers,
+      ...options.headers,
     },
   });
 
   if (response.status === 401) {
-    // Attempt refresh, retry, or redirect to login
+    clearToken();
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, await response.json());
+    const error = await response.json();
+    throw new Error(error.error?.message || 'API Error');
+  }
+
+  if (response.status === 204) {
+    return null as T;
   }
 
   return response.json();
@@ -62,148 +95,138 @@ export async function apiClient<T>(
 ```
 
 **Alternatives Considered**:
-- Axios: Adds dependency; fetch is sufficient for this scope
-- React Query: Adds caching complexity; spec excludes caching
-- SWR: Same as React Query
+- Axios: Adds dependency unnecessarily
+- React Query/SWR: Adds caching complexity; spec excludes caching
+- fetch without wrapper: Duplicates header logic across components
 
 ---
 
-### Q3: State Management Approach
+### Q3: State Management
 
-**Decision**: React Context for auth state; local component state for UI.
+**Decision**: Local component state only (useState).
 
 **Rationale**:
-- Auth state needed globally (user, token, isAuthenticated)
-- Task state local to dashboard (no cross-page sharing needed)
-- Spec explicitly excludes optimistic updates
-- Avoids Redux/Zustand overhead for simple state
+- Spec explicitly excludes advanced state management
+- Auth state can be derived from token presence
+- Task list state local to dashboard page
+- No cross-component state sharing needed
 
 **Pattern**:
 ```typescript
-// lib/auth-context.tsx
-const AuthContext = createContext<AuthState>(null);
+// In dashboard/page.tsx
+const [tasks, setTasks] = useState<Task[]>([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
 
-export function AuthProvider({ children }) {
-  const [state, setState] = useState<AuthState>(initialState);
-  // Token refresh, user hydration on mount
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+useEffect(() => {
+  fetchTasks();
+}, []);
+```
+
+**Alternatives Considered**:
+- React Context: Overkill; no shared state needed
+- Redux/Zustand: Explicitly excluded by spec
+- Global variable: Anti-pattern; breaks React model
+
+---
+
+### Q4: Route Protection
+
+**Decision**: Client-side check only (no middleware).
+
+**Rationale**:
+- Minimal scope; middleware adds complexity
+- Dashboard page checks token on mount
+- Redirect via router if not authenticated
+- Simple and sufficient for demo
+
+**Pattern**:
+```typescript
+// app/dashboard/page.tsx
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { getToken } from '@/lib/auth';
+
+export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!getToken()) {
+      router.push('/login');
+    }
+  }, [router]);
+
+  // ... rest of component
 }
 ```
 
 **Alternatives Considered**:
-- Redux: Overkill; spec has no complex state flows
-- Zustand: Simpler than Redux but still adds dependency
-- Jotai/Recoil: Atomic state unnecessary for this scope
+- Next.js middleware: More robust but adds complexity
+- Server-side check: Requires cookie-based auth
+- HOC wrapper: Adds indirection
+
+**Tradeoff Documented**: Brief flash of content possible before redirect. Acceptable for demo.
 
 ---
 
-### Q4: Protected Route Implementation
+### Q5: Form Validation
 
-**Decision**: Middleware + client-side check hybrid.
+**Decision**: Required-field check only; defer to server for business rules.
 
 **Rationale**:
-- Middleware provides server-side redirect (fast)
-- Client-side check provides fallback for edge cases
-- Spec requires immediate redirect (<100ms)
+- Spec FR-017 requires only basic validation
+- Phase I rules enforced by backend
+- Minimal client validation reduces code
 
 **Pattern**:
 ```typescript
-// middleware.ts
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('refresh_token');
-  if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url));
+// In TaskForm.tsx
+const [title, setTitle] = useState('');
+const [error, setError] = useState<string | null>(null);
+
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+  if (!title.trim()) {
+    setError('Title is required');
+    return;
   }
-}
-
-// app/dashboard/layout.tsx
-export default function DashboardLayout({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <LoadingSpinner />;
-  if (!isAuthenticated) redirect('/login');
-  return children;
-}
+  // Submit to API
+};
 ```
 
 **Alternatives Considered**:
-- Server-only (middleware): Misses client-side token expiry
-- Client-only (useEffect): Slower; shows protected content briefly
+- Zod/Yup: Adds dependency; overkill for one required field
+- React Hook Form: Adds complexity beyond minimal scope
+- Full client validation: Duplicates Phase I logic
 
 ---
 
-### Q5: Error Handling Strategy
+### Q6: Styling Approach
 
-**Decision**: Centralized error boundary + per-operation error state.
-
-**Rationale**:
-- Global boundary catches unexpected crashes
-- Per-operation state enables inline error display (spec FR-024)
-- No silent failures (spec FR-026)
-
-**Pattern**:
-```typescript
-// Per-operation pattern
-const [error, setError] = useState<ApiError | null>(null);
-const [loading, setLoading] = useState(false);
-
-async function createTask(data) {
-  setLoading(true);
-  setError(null);
-  try {
-    await apiClient('/tasks', { method: 'POST', body: JSON.stringify(data) });
-  } catch (e) {
-    setError(e);
-  } finally {
-    setLoading(false);
-  }
-}
-```
-
-**Alternatives Considered**:
-- Toast notifications only: Misses persistent error display requirement
-- Global error state: Overwrites errors from concurrent operations
-
----
-
-### Q6: Form Validation Approach
-
-**Decision**: Client-side validation before submit; server response as source of truth.
+**Decision**: Tailwind CSS with inline classes; no component abstraction.
 
 **Rationale**:
-- Spec FR-029 requires inline validation before submission
-- Server validation is authoritative (Phase I rules)
-- No optimistic updates means we wait for server confirmation
-
-**Pattern**:
-- Required field check: client-side (immediate feedback)
-- Business rule validation: server-side (authoritative)
-- Display server errors inline after submission failure
-
-**Alternatives Considered**:
-- Server-only: Poor UX; users must submit to see basic errors
-- Full client-side replication: Duplicates Phase I logic; violates constitution
-
----
-
-### Q7: Responsive Design Breakpoints
-
-**Decision**: Use Tailwind defaults with mobile-first approach.
-
-**Rationale**:
-- Spec requires 320px, 768px, 1024px support
-- Tailwind breakpoints: sm:640px, md:768px, lg:1024px
-- Mobile-first aligns with spec order
+- Spec explicitly allows minimal styling
+- No responsive breakpoint requirements
+- Inline classes sufficient for small component count
+- Functional appearance over polish
 
 **Pattern**:
 ```tsx
-<div className="w-full md:w-1/2 lg:w-1/3">
-  {/* Mobile: full width, tablet: half, desktop: third */}
-</div>
+<button
+  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+  onClick={handleClick}
+>
+  Submit
+</button>
 ```
 
 **Alternatives Considered**:
-- Custom breakpoints: Adds complexity; Tailwind defaults sufficient
-- CSS-in-JS: Adds dependency; Tailwind already in stack
+- Shadcn/UI: Explicitly excluded by spec
+- CSS Modules: Adds file overhead for minimal benefit
+- Separate component library: Overkill for minimal scope
 
 ---
 
@@ -211,45 +234,39 @@ async function createTask(data) {
 
 | Area | Decision | Rationale |
 |------|----------|-----------|
-| Auth | Better Auth React SDK | Official Next.js support, handles tokens |
-| API | Custom fetch client | Minimal, centralized, testable |
-| State | React Context + local | Simplest for scope |
-| Routing | Middleware + client hybrid | Fast + reliable |
-| Errors | Per-operation state | Inline display per spec |
-| Forms | Client + server validation | UX + authority balance |
-| CSS | Tailwind mobile-first | Spec breakpoints covered |
+| Auth storage | localStorage | Simplest; acceptable for demo |
+| API client | Native fetch wrapper | No dependencies; sufficient |
+| State | Local useState only | Spec requirement |
+| Routing | Client-side check | Minimal; no middleware |
+| Validation | Required-field only | Defer to backend |
+| Styling | Inline Tailwind | Functional; no polish needed |
 
 ---
 
 ## Dependencies Confirmed
 
 From Spec 1 (Backend API):
-- `GET /api/tasks` — List tasks (FR-011)
-- `POST /api/tasks` — Create task (FR-005)
-- `PATCH /api/tasks/{id}` — Update task (FR-016)
-- `DELETE /api/tasks/{id}` — Delete task (FR-020)
-- Error format: `{"error": {"code": "...", "message": "..."}}`
+- `GET /api/tasks` — List tasks
+- `POST /api/tasks` — Create task
+- `PATCH /api/tasks/{id}` — Update task
+- `DELETE /api/tasks/{id}` — Delete task
 
 From Spec 2 (Auth):
-- `POST /api/auth/login` — Returns access_token, refresh_token (FR-026)
-- `POST /api/auth/register` — Creates user, returns tokens (FR-025)
-- `POST /api/auth/logout` — Invalidates tokens (FR-027)
-- `POST /api/auth/refresh` — Renews access_token (FR-028)
-- JWT claims: `sub` (user_id), `email`, `exp`
+- `POST /api/auth/login` — Returns access_token
+- `POST /api/auth/register` — Creates user, returns access_token
+
+Note: refresh_token and /api/auth/refresh NOT used in minimal scope.
 
 ---
 
 ## Risks Identified
 
-1. **Token refresh race condition**: Multiple concurrent requests during refresh could cause issues.
-   - Mitigation: Queue requests during refresh; retry after new token obtained.
+1. **XSS vulnerability with localStorage**: Documented tradeoff; acceptable for hackathon.
 
-2. **Better Auth version compatibility**: Next.js 16+ is recent.
-   - Mitigation: Pin version; test during implementation.
+2. **No token refresh**: User must re-login on expiry. Document in README.
 
-3. **Middleware cold start**: Serverless middleware may add latency.
-   - Mitigation: Monitor; fallback to client-side if needed.
+3. **CORS configuration**: Backend must allow frontend origin. Test early.
 
 ---
 
-**Phase 0 Complete**. Proceed to Phase 1: Design & Contracts.
+**Phase 0 Complete**. Proceed to implementation.

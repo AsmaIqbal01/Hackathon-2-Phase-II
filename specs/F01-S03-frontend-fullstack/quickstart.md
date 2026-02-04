@@ -1,67 +1,79 @@
-# Quickstart: Frontend Application
+# Quickstart: Frontend Application (Minimal)
 
 **Feature**: F01-S03-frontend-fullstack
-**Date**: 2026-01-30
+**Date**: 2026-02-01
+**Scope**: Minimal hackathon integration proof
 
 ## Prerequisites
 
 - Node.js 18+ installed
-- Backend API running (Spec 1)
-- Auth API running (Spec 2)
-- Environment variable: `NEXT_PUBLIC_API_URL`
+- npm package manager
+- Backend API running (see backend/README.md)
 
 ## Setup
 
+### 1. Navigate to Frontend Directory
+
 ```bash
-# Navigate to frontend directory
 cd frontend
+```
 
-# Install dependencies
+### 2. Install Dependencies
+
+```bash
 npm install
+```
 
-# Configure environment
+### 3. Configure Environment
+
+Copy the example environment file:
+
+```bash
 cp .env.example .env.local
-# Edit .env.local:
-# NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-# Start development server
+Edit `.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+### 4. Run Development Server
+
+```bash
 npm run dev
 ```
 
-## Project Structure
+Frontend available at: http://localhost:3000
+
+---
+
+## Project Structure (Minimal)
 
 ```
 frontend/
 ├── app/
-│   ├── layout.tsx           # Root layout with AuthProvider
-│   ├── page.tsx             # Landing → redirect
+│   ├── layout.tsx           # Root layout
+│   ├── page.tsx             # Redirect logic
 │   ├── login/page.tsx       # Login form
-│   ├── signup/page.tsx      # Registration form
-│   └── dashboard/
-│       ├── layout.tsx       # Protected layout
-│       └── page.tsx         # Task list + CRUD
-├── components/
-│   ├── auth/
-│   │   ├── LoginForm.tsx
-│   │   └── SignupForm.tsx
-│   ├── tasks/
-│   │   ├── TaskList.tsx
-│   │   ├── TaskItem.tsx
-│   │   └── TaskForm.tsx
-│   └── ui/
-│       ├── Button.tsx
-│       ├── Input.tsx
-│       └── Modal.tsx
+│   ├── register/page.tsx    # Registration form
+│   └── dashboard/page.tsx   # Task list + CRUD
 ├── lib/
-│   ├── api-client.ts        # Centralized fetch
-│   ├── auth-context.tsx     # Auth state provider
-│   └── types.ts             # TypeScript interfaces
-└── middleware.ts            # Route protection
+│   ├── api.ts               # API client with JWT
+│   └── auth.ts              # Token storage helpers
+├── components/
+│   ├── TaskList.tsx         # Task list component
+│   ├── TaskItem.tsx         # Single task row
+│   └── TaskForm.tsx         # Create task form
+├── .env.example             # Environment template
+└── README.md                # Setup documentation
 ```
+
+---
 
 ## Key Files
 
-### Environment
+### Environment Configuration
 
 ```env
 # .env.local
@@ -71,7 +83,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ### API Client Usage
 
 ```typescript
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/api';
 import { Task } from '@/lib/types';
 
 // List tasks
@@ -83,7 +95,7 @@ const newTask = await apiClient<Task>('/api/tasks', {
   body: JSON.stringify({ title: 'New task' }),
 });
 
-// Update task
+// Toggle task status
 const updated = await apiClient<Task>(`/api/tasks/${id}`, {
   method: 'PATCH',
   body: JSON.stringify({ status: 'completed' }),
@@ -93,77 +105,88 @@ const updated = await apiClient<Task>(`/api/tasks/${id}`, {
 await apiClient(`/api/tasks/${id}`, { method: 'DELETE' });
 ```
 
-### Auth Context Usage
+### Auth Helpers Usage
 
 ```typescript
-import { useAuth } from '@/lib/auth-context';
+import { getToken, setToken, clearToken } from '@/lib/auth';
 
-function Component() {
-  const { user, isAuthenticated, login, logout } = useAuth();
-
-  if (!isAuthenticated) {
-    return <p>Please log in</p>;
-  }
-
-  return <p>Welcome, {user.email}</p>;
+// Check if logged in
+if (getToken()) {
+  // User is authenticated
 }
+
+// After login
+setToken(response.access_token);
+
+// On logout
+clearToken();
 ```
+
+---
 
 ## Routes
 
-| Path | Auth | Description |
-|------|------|-------------|
-| `/` | No | Landing, redirects to dashboard or login |
+| Path | Auth Required | Description |
+|------|---------------|-------------|
+| `/` | No | Redirects to /dashboard or /login |
 | `/login` | No | Login form |
-| `/signup` | No | Registration form |
+| `/register` | No | Registration form |
 | `/dashboard` | Yes | Task list and CRUD |
 
-## Common Tasks
+---
 
-### Add a new task
-1. Navigate to `/dashboard`
-2. Click "Add Task"
-3. Enter title (required)
-4. Submit
+## Integration Verification
 
-### Mark task complete
-1. Find task in list
-2. Click status toggle or edit
-3. Change status to "completed"
-
-### Delete a task
-1. Find task in list
-2. Click delete button
-3. Confirm in modal
-
-## Testing
+### Start Backend
 
 ```bash
-# Run tests
-npm test
-
-# Run dev server with backend
-# Terminal 1: Backend (Spec 1 + Spec 2)
-cd backend && uvicorn src.main:app --reload
-
-# Terminal 2: Frontend
-cd frontend && npm run dev
+cd backend
+source venv/bin/activate  # Windows: venv\Scripts\activate
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+### Start Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+### Verify Full Stack Works
+
+1. Open http://localhost:3000
+2. Register a new account
+3. Create a task
+4. Refresh page → task persists (SC-005)
+5. Open incognito window
+6. Register different account
+7. Verify tasks are separate (SC-004)
+
+---
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
 | "Network error" | Check NEXT_PUBLIC_API_URL matches backend |
-| 401 on all requests | Token expired; re-login |
+| 401 Unauthorized | Token expired; re-login |
 | CORS errors | Backend must allow frontend origin |
-| Build fails | Run `npm install` again |
+| Empty task list | Check backend connection |
 
-## Integration Verification
+---
 
-1. Start backend at `http://localhost:8000`
-2. Start frontend at `http://localhost:3000`
-3. Register a new user
-4. Create a task
-5. Refresh page → task persists
-6. Log out and log in → same tasks visible
+## Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## Notes for Reviewers
+
+- JWT stored in localStorage (acceptable for demo)
+- No token refresh - re-login on expiry
+- No responsive design polish
+- Focus is on proving integration correctness

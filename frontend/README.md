@@ -1,335 +1,217 @@
-# Frontend – Next.js 16+ App Router
+# Todo App Frontend
 
 **Phase II Full-Stack Web Application Frontend**
 
-This is the frontend web application for the Evolution of Todo Phase II project, built with Next.js 16+, TypeScript, Tailwind CSS, and Better Auth.
+This is the frontend web application for the Evolution of Todo Phase II project, built with Next.js 16+, TypeScript, and Tailwind CSS.
 
 ---
 
 ## Overview
 
-The frontend provides:
+A minimal Next.js frontend demonstrating secure full-stack integration with the FastAPI backend. This application allows users to register, login, and manage their personal tasks with complete data isolation.
 
-- **Responsive Web UI** built with Next.js App Router
-- **JWT-based authentication** with Better Auth
-- **Type-safe development** with TypeScript
-- **Modern styling** with Tailwind CSS
-- **API integration** with centralized client
-- **Server Components** for optimal performance
+## Features
 
----
-
-## Technology Stack
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Framework | **Next.js 16+** | React framework with App Router |
-| Language | **TypeScript** | Type safety and developer experience |
-| Styling | **Tailwind CSS** | Utility-first CSS framework |
-| Authentication | **Better Auth** | JWT token management |
-| State Management | **React Hooks** | useState, useContext, custom hooks |
-| HTTP Client | **Fetch API** | Centralized API client with JWT |
+- User authentication (register/login)
+- JWT-based authorization
+- Task CRUD operations (Create, Read, Update, Delete)
+- Task status toggling (todo ↔ completed)
+- Responsive UI with Tailwind CSS
+- Secure token storage
+- User data isolation
 
 ---
 
-## Project Structure (Planned)
+## Tech Stack
+
+- **Framework**: Next.js 16+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **API Client**: Native Fetch API
+- **State Management**: React Hooks (useState, useEffect)
+- **Authentication**: JWT tokens stored in localStorage
+
+---
+
+## Prerequisites
+
+- Node.js 18+ and npm
+- Running backend API (see `../backend/README.md`)
+
+## Project Structure
 
 ```
 frontend/
-├── app/                              # Next.js App Router
-│   ├── layout.tsx                    # Root layout
-│   ├── page.tsx                      # Home page (/)
-│   ├── login/
-│   │   └── page.tsx                  # Login page
-│   ├── signup/
-│   │   └── page.tsx                  # Signup page
-│   └── dashboard/
-│       ├── layout.tsx                # Dashboard layout (protected)
-│       ├── page.tsx                  # Dashboard page
-│       └── tasks/
-│           ├── page.tsx              # Task list
-│           └── [id]/
-│               └── page.tsx          # Task detail
+├── app/
+│   ├── layout.tsx           # Root layout
+│   ├── page.tsx             # Redirect logic (/ → /login or /dashboard)
+│   ├── login/page.tsx       # Login page
+│   ├── register/page.tsx    # Registration page
+│   └── dashboard/page.tsx   # Task dashboard (protected)
 ├── components/
-│   ├── ui/                           # Reusable UI components
-│   │   ├── Button.tsx
-│   │   ├── Input.tsx
-│   │   ├── Card.tsx
-│   │   └── Modal.tsx
-│   ├── tasks/                        # Task-specific components
-│   │   ├── TaskList.tsx
-│   │   ├── TaskItem.tsx
-│   │   ├── TaskForm.tsx
-│   │   └── TaskFilters.tsx
-│   └── auth/                         # Auth-related components
-│       ├── LoginForm.tsx
-│       ├── SignupForm.tsx
-│       └── ProtectedRoute.tsx
+│   ├── TaskList.tsx         # Task list with loading/error/empty states
+│   ├── TaskItem.tsx         # Individual task with toggle/delete actions
+│   └── TaskForm.tsx         # Create task form
 ├── lib/
-│   ├── api-client.ts                 # Centralized API client
-│   ├── auth.ts                       # Better Auth configuration
-│   └── utils.ts                      # Utility functions
-├── types/
-│   ├── task.ts                       # Task TypeScript types
-│   └── user.ts                       # User TypeScript types
-├── styles/
-│   └── globals.css                   # Global styles (Tailwind)
-├── public/                           # Static assets
-├── .env.local.example                # Environment variables template
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── next.config.js
-└── README.md                         # This file
+│   ├── types.ts             # TypeScript type definitions
+│   ├── auth.ts              # Token storage helpers
+│   └── api.ts               # API client with JWT injection
+├── .env.example             # Environment variable template
+└── README.md                # This file
 ```
 
 ---
 
-## Setup (To Be Implemented)
+## Setup Instructions
 
-### Prerequisites
-
-- **Node.js** 20+ (LTS recommended)
-- **npm** or **yarn**
-
-### Installation
+### 1. Install Dependencies
 
 ```bash
-cd frontend
 npm install
-# or
-yarn install
 ```
 
-### Configuration
+### 2. Configure Environment Variables
 
-Copy the example environment file:
+Create a `.env.local` file in the `frontend/` directory:
 
 ```bash
-cp .env.local.example .env.local
+cp .env.example .env.local
 ```
 
-Edit `.env.local`:
+Edit `.env.local` and set your backend API URL:
 
-```ini
-# Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# Better Auth Configuration
-NEXT_PUBLIC_AUTH_URL=http://localhost:3000
-NEXT_PUBLIC_JWT_SECRET=your-secret-key-must-match-backend
-
-# Environment
-NODE_ENV=development
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ```
 
-**IMPORTANT**: `NEXT_PUBLIC_JWT_SECRET` MUST match the `JWT_SECRET` in the backend `.env`.
-
-### Running Development Server
+### 3. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+The application will be available at [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Features (To Be Implemented)
+## Usage
 
-### 1. Authentication
+### Register a New Account
 
-- **Signup**: User registration with email and password
-- **Login**: JWT-based authentication via Better Auth
-- **Protected Routes**: Dashboard and task pages require authentication
-- **Auto Redirect**: Redirect to login if not authenticated
+1. Navigate to [http://localhost:3000](http://localhost:3000)
+2. Click "Register"
+3. Enter email and password
+4. Submit to create account and auto-login
 
-### 2. Task Management
+### Login
 
-- **List Tasks**: View all tasks for authenticated user
-- **Create Task**: Add new task with title, description, priority, tags
-- **Update Task**: Edit task details and status
-- **Delete Task**: Remove task from list
-- **Filter Tasks**: Filter by status, priority, tags
-- **Search Tasks**: Search by title or description
+1. Navigate to [http://localhost:3000/login](http://localhost:3000/login)
+2. Enter credentials
+3. Submit to login and redirect to dashboard
 
-### 3. Responsive Design
+### Manage Tasks
 
-- **Mobile-First**: Designed for mobile, tablet, and desktop
-- **Tailwind CSS**: Utility-first styling
-- **Breakpoints**: sm (640px), md (768px), lg (1024px), xl (1280px)
+**Create Task:**
+- Enter task title in the input field
+- Click "Add Task"
 
-### 4. API Integration
+**Toggle Status:**
+- Click "Complete" to mark as completed
+- Click "Undo" to mark as todo
 
-- **Centralized Client**: Single API client with JWT headers
-- **Error Handling**: Handle 401 (redirect to login), 403 (access denied)
-- **Type Safety**: TypeScript types for requests and responses
+**Delete Task:**
+- Click "Delete" button
+- Confirm deletion
 
----
-
-## API Client Pattern (To Be Implemented)
-
-```typescript
-// lib/api-client.ts
-import { authClient } from '@/lib/auth'
-
-export async function fetchAPI(endpoint: string, options?: RequestInit) {
-  const session = await authClient.getSession()
-  const token = session?.token
-
-  if (!token) {
-    window.location.href = '/login'
-    throw new Error('Not authenticated')
-  }
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`,
-    {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        ...options?.headers,
-      },
-    }
-  )
-
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('Authentication required')
-  }
-
-  if (response.status === 403) {
-    throw new Error('Access denied')
-  }
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
-  }
-
-  return response.json()
-}
-```
+**Logout:**
+- Click "Logout" button in dashboard header
 
 ---
 
-## Better Auth Configuration (To Be Implemented)
+## API Integration
 
-```typescript
-// lib/auth.ts
-import { betterAuth } from "better-auth/client"
+All API requests are handled by the centralized `apiClient` in `lib/api.ts`:
 
-export const authClient = betterAuth({
-  baseURL: process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:3000",
-  storage: {
-    type: "cookie",
-    cookieOptions: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    },
-  },
-  jwt: {
-    secret: process.env.NEXT_PUBLIC_JWT_SECRET!,
-    expiresIn: "1h",
-  },
-  refreshToken: {
-    enabled: true,
-    expiresIn: "7d",
-    autoRefresh: true,
-  },
-})
-```
+- Automatically injects `Authorization: Bearer <token>` header
+- Handles 401 responses by clearing token and redirecting to login
+- Parses error responses and throws user-friendly errors
+
+### Endpoints Used
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/auth/register` | Create new account |
+| POST | `/auth/login` | Login with credentials |
+| GET | `/tasks` | Fetch user's tasks |
+| POST | `/tasks` | Create new task |
+| PATCH | `/tasks/{id}` | Update task (toggle status) |
+| DELETE | `/tasks/{id}` | Delete task |
 
 ---
 
-## Development Workflow
+## Security
 
-### Agentic Dev Stack
-
-This frontend will be implemented using the **Agentic Dev Stack** workflow:
-
-1. **Create Specification**: Define frontend requirements
-2. **Generate Plan**: Architecture decisions and component structure
-3. **Break into Tasks**: Atomic implementation tasks
-4. **Implement with Agent**: Use `nextjs-frontend-optimizer` agent
-
-### Agent: nextjs-frontend-optimizer
-
-The `nextjs-frontend-optimizer` agent handles:
-
-- Next.js App Router file structure
-- Server Components vs Client Components decisions
-- Responsive design with Tailwind CSS
-- Performance optimization (memoization, lazy loading)
-- Accessibility (WCAG 2.1 AA compliance)
-- Component architecture and reusability
+- JWT tokens stored in `localStorage` (acceptable for hackathon scope)
+- All task API requests require authentication
+- Backend enforces user-scoped data access
+- 401 responses automatically clear token and redirect to login
+- No secrets committed to repository (see `.gitignore`)
 
 ---
 
-## Building for Production
+## Build for Production
 
 ```bash
 npm run build
-# or
-yarn build
+npm start
 ```
 
-### Start Production Server
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:8000/api` |
+
+## Troubleshooting
+
+### "Unauthorized" errors
+
+- Ensure backend is running
+- Check that `NEXT_PUBLIC_API_URL` points to correct backend
+- Try logging out and logging back in
+
+### Tasks not appearing
+
+- Verify user is logged in
+- Check browser console for errors
+- Ensure backend database is running
+
+### Registration fails
+
+- Check if email already exists
+- Verify backend validation rules
+- Check network tab for detailed error
+
+## Development
+
+### Running the Development Server
 
 ```bash
-npm run start
-# or
-yarn start
+npm run dev
+```
+
+### Linting
+
+```bash
+npm run lint
 ```
 
 ---
 
-## Deployment
+## License
 
-### Vercel (Recommended)
-
-1. Push code to GitHub
-2. Connect repository to Vercel
-3. Configure environment variables
-4. Deploy
-
-### Environment Variables (Production)
-
-```ini
-NEXT_PUBLIC_API_URL=https://your-backend-api.railway.app
-NEXT_PUBLIC_AUTH_URL=https://your-frontend.vercel.app
-NEXT_PUBLIC_JWT_SECRET=your-production-secret-key
-NODE_ENV=production
-```
+This project is for educational and hackathon purposes.
 
 ---
 
-## References
-
-- **Next.js Documentation**: https://nextjs.org/docs
-- **Tailwind CSS**: https://tailwindcss.com/docs
-- **Better Auth**: https://www.better-auth.com/docs
-- **TypeScript**: https://www.typescriptlang.org/docs
-
----
-
-## Implementation Status
-
-🚧 **STATUS**: Not yet implemented
-
-The frontend will be implemented following the **Spec-Driven Development** workflow:
-
-1. Create frontend specification
-2. Generate implementation plan
-3. Break into atomic tasks
-4. Implement using `nextjs-frontend-optimizer` agent
-
-See [../CLAUDE.md](../CLAUDE.md) for development workflow details.
-
----
-
-**To be built with Next.js 16+, TypeScript, and Tailwind CSS** ⚛️
+**Next Steps**: Refer to `../backend/README.md` to set up the backend API.

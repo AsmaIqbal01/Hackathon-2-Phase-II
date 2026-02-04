@@ -57,9 +57,9 @@
 
 1. ✅ **Multi-User Capabilities**: Enable multiple users to use the system independently
 2. ✅ **Persistent Data Storage**: Store tasks in PostgreSQL across sessions
-3. ✅ **Responsive Web Interface**: Build a modern UI with Next.js 16+
+3. 🚧 **Responsive Web Interface**: Build a modern UI with Next.js 16+ *(setup complete, UI implementation deferred)*
 4. ✅ **RESTful API**: Implement secure, well-documented API endpoints
-5. ✅ **Secure Authentication**: JWT-based auth with Better Auth
+5. ✅ **Secure Authentication**: JWT-based auth with backend verification
 6. ✅ **Data Isolation**: Enforce user-scoped access at the backend layer
 7. ✅ **Spec-Driven Development**: All code generated from specifications
 8. ✅ **No Manual Coding**: 100% AI-generated implementation via Claude Code
@@ -478,7 +478,7 @@ See [frontend/README.md](frontend/README.md) for detailed setup.
 
 Phase II is complete when:
 
-1. ✅ All Phase I features work via web UI
+1. 🚧 All Phase I features work via web UI *(backend ready, frontend UI deferred)*
 2. ✅ Data persists across sessions (PostgreSQL)
 3. ✅ Multiple users can use the system independently
 4. ✅ Authentication enforced on all endpoints
@@ -486,7 +486,7 @@ Phase II is complete when:
 6. ✅ Specs fully explain the system
 7. ✅ Cross-user access returns 403
 8. ✅ Invalid JWT returns 401
-9. ✅ Frontend and backend decoupled
+9. ✅ Frontend and backend decoupled *(API contracts defined, UI deferred)*
 10. ✅ Task CRUD logic reused from Phase I
 
 ---

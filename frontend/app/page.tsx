@@ -1,10 +1,25 @@
+// T009: Redirect logic - authenticated → /dashboard, else → /login
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated } from '@/lib/auth';
+
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.push('/dashboard');
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold mb-4">Todo App</h1>
-        <p className="text-lg">Phase II Full-Stack Web Application</p>
-      </div>
-    </main>
-  )
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-gray-500">Redirecting...</p>
+    </div>
+  );
 }

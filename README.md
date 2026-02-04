@@ -369,34 +369,110 @@ cd Phase-II
 
 ```bash
 cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your database credentials and JWT secret
-python -m src.main
 ```
 
-See [backend/README.md](backend/README.md) for detailed setup.
+**Run Backend:**
+```bash
+cd backend
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend will be available at: http://localhost:8000
+API docs at: http://localhost:8000/docs
 
 #### 3. Frontend Setup
 
 ```bash
 cd frontend
 npm install
-cp .env.local.example .env.local
-# Edit .env.local with API URL and Better Auth config
+cp .env.example .env.local
+# Edit .env.local with API URL
+```
+
+**Run Frontend:**
+```bash
+cd frontend
 npm run dev
 ```
 
-See [frontend/README.md](frontend/README.md) for detailed setup.
+Frontend will be available at: http://localhost:3000
 
-#### 4. Database Setup
+#### 4. Run Both Simultaneously (Development)
 
-1. Create a Neon PostgreSQL database
-2. Run migrations:
-   ```bash
-   cd backend
-   alembic upgrade head
+Open two terminal windows:
+
+**Terminal 1 - Backend:**
+```bash
+cd "E:/Hackathon 2/Phase-II/backend"
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd "E:/Hackathon 2/Phase-II/frontend"
+npm run dev
+```
+
+#### 5. Database Setup
+
+1. Create a Neon PostgreSQL database at https://neon.tech
+2. Update `backend/.env` with your DATABASE_URL:
    ```
+   DATABASE_URL=postgresql://user:password@host.neon.tech/database?sslmode=require
+   ```
+3. Tables are auto-created on first run (no migrations needed for initial deployment)
+
+---
+
+## Deployment
+
+### Production URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | *Deploy to Vercel - URL will be provided* |
+| Backend | *Deploy to Vercel/Railway - URL will be provided* |
+| API Docs | `<backend-url>/docs` |
+
+### Environment Variables
+
+#### Backend (Vercel/Railway)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | Neon PostgreSQL connection string | `postgresql://user:pass@host/db?sslmode=require` |
+| `JWT_SECRET` | Secret key for JWT tokens (generate with `openssl rand -hex 32`) | `your-32-char-secret` |
+| `ENVIRONMENT` | Set to `production` | `production` |
+| `DEBUG` | Set to `False` | `False` |
+| `CORS_ORIGINS` | Frontend production URL | `https://your-app.vercel.app` |
+
+#### Frontend (Vercel)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `https://your-backend.vercel.app/api` |
+
+### Deploy to Vercel
+
+#### Backend Deployment
+
+1. Push code to GitHub
+2. Go to [Vercel](https://vercel.com) and import the repository
+3. Set root directory to `backend`
+4. Configure environment variables in Vercel dashboard
+5. Deploy
+
+#### Frontend Deployment
+
+1. Go to [Vercel](https://vercel.com) and import the repository
+2. Set root directory to `frontend`
+3. Set `NEXT_PUBLIC_API_URL` to your deployed backend URL
+4. Deploy
 
 ---
 

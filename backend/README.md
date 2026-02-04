@@ -4,7 +4,7 @@
 
 This is the backend REST API for the Evolution of Todo Phase II project, built with FastAPI, SQLModel ORM, and Neon Serverless PostgreSQL.
 
-> **Note**: This is F01-S01 (Backend API & Database). Authentication via JWT will be added in Spec F01-S02.
+> **Note**: This implementation includes both F01-S01 (Backend API & Database) and F01-S02 (Authentication & Security). JWT-based authentication is fully implemented.
 
 ---
 
@@ -25,7 +25,7 @@ This is the backend REST API for the Evolution of Todo Phase II project, built w
 The backend provides:
 
 - **RESTful API** endpoints for task CRUD operations
-- **Temporary user_id parameter** (will be replaced by JWT in Spec 2)
+- **JWT-based authentication** with user identity extracted from verified tokens
 - **User-scoped data access** (each user can only access their own tasks)
 - **Input validation** with Pydantic models
 - **PostgreSQL persistence** via Neon Serverless
@@ -78,39 +78,49 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ## API Endpoints
 
-All endpoints require `user_id` as query parameter or `X-User-ID` header.
+All task endpoints require JWT authentication via `Authorization: Bearer <token>` header. User identity is extracted from the verified JWT token.
 
 ### Task CRUD Operations
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| POST | `/api/tasks?user_id=xxx` | Create task | 201 |
-| GET | `/api/tasks?user_id=xxx` | List user's tasks | 200 |
-| GET | `/api/tasks/{id}?user_id=xxx` | Get task by ID | 200/403/404 |
-| PATCH | `/api/tasks/{id}?user_id=xxx` | Update task | 200/403/404 |
-| DELETE | `/api/tasks/{id}?user_id=xxx` | Delete task | 204/403/404 |
+| POST | `/api/tasks` | Create task | 201 |
+| GET | `/api/tasks` | List user's tasks | 200 |
+| GET | `/api/tasks/{id}` | Get task by ID | 200/403/404 |
+| PATCH | `/api/tasks/{id}` | Update task | 200/403/404 |
+| DELETE | `/api/tasks/{id}` | Delete task | 204/403/404 |
 
 ### Example Requests
 
 ```bash
-# Create a task
-curl -X POST "http://localhost:8000/api/tasks?user_id=alice" \
+# First, login to get a JWT token
+TOKEN=$(curl -s -X POST "http://localhost:8000/auth/login" \
   -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}' | jq -r '.token')
+
+# Create a task
+curl -X POST "http://localhost:8000/api/tasks" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"title": "Buy groceries", "priority": "high", "tags": ["shopping"]}'
 
 # List tasks
-curl "http://localhost:8000/api/tasks?user_id=alice"
+curl "http://localhost:8000/api/tasks" \
+  -H "Authorization: Bearer $TOKEN"
 
 # List with filters
-curl "http://localhost:8000/api/tasks?user_id=alice&status=todo&priority=high"
+curl "http://localhost:8000/api/tasks?status=todo&priority=high" \
+  -H "Authorization: Bearer $TOKEN"
 
 # Update task
-curl -X PATCH "http://localhost:8000/api/tasks/{task_id}?user_id=alice" \
+curl -X PATCH "http://localhost:8000/api/tasks/{task_id}" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"status": "completed"}'
 
 # Delete task
-curl -X DELETE "http://localhost:8000/api/tasks/{task_id}?user_id=alice"
+curl -X DELETE "http://localhost:8000/api/tasks/{task_id}" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Error Responses
@@ -118,15 +128,16 @@ curl -X DELETE "http://localhost:8000/api/tasks/{task_id}?user_id=alice"
 ```json
 {
   "error": {
-    "code": 400,
-    "message": "user_id is required"
+    "code": 401,
+    "message": "Invalid or expired token"
   }
 }
 ```
 
 | Code | Meaning |
 |------|---------|
-| 400 | Bad Request (validation error, missing user_id) |
+| 400 | Bad Request (validation error) |
+| 401 | Unauthorized (missing or invalid JWT) |
 | 403 | Forbidden (cross-user access attempt) |
 | 404 | Not Found (task doesn't exist) |
 | 500 | Internal Server Error |

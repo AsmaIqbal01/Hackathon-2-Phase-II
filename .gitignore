@@ -10,8 +10,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
+
+# Ensure frontend lib is NOT ignored
+!frontend/lib/
 parts/
 sdist/
 var/

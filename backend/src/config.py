@@ -1,4 +1,5 @@
 """Application configuration using pydantic-settings."""
+import os
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,19 +15,19 @@ class Settings(BaseSettings):
     )
 
     # Database
-    database_url: str = "postgresql://localhost/todo_db"
+    database_url: str = "sqlite:///./todo.db"
 
     # Application
     app_name: str = "Todo Backend API"
     debug: bool = False
     environment: str = "development"
 
-    # Server
+    # Server (PORT is set by Railway automatically)
     api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    api_port: int = int(os.environ.get("PORT", 8000))
 
-    # CORS
-    cors_origins: str = "http://localhost:3000"
+    # CORS (comma-separated origins, supports wildcards for dev)
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # Logging
     log_level: str = "INFO"

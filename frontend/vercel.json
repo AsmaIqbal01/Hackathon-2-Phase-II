@@ -5,8 +5,8 @@
   "installCommand": "npm install",
   "env": {
     "NEXT_PUBLIC_API_URL": {
-      "description": "Backend API URL (Hugging Face Space URL)",
-      "value": "https://your-space-name.hf.space/api"
+      "description": "Backend API URL (Render deployment URL + /api)",
+      "value": "https://your-backend-name.onrender.com/api"
     }
   }
 }

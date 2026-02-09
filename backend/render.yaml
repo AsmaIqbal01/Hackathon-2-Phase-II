@@ -6,16 +6,25 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
         value: "3.11"
       - key: DATABASE_URL
         sync: false
+        # Set this to your Neon PostgreSQL connection string:
+        # postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
       - key: JWT_SECRET
         sync: false
+        # Generate with: openssl rand -hex 32
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
         value: "False"
+      - key: LOG_LEVEL
+        value: INFO
       - key: CORS_ORIGINS
         sync: false
+        # Set this to: https://your-app.vercel.app,http://localhost:3000
+      - key: APP_NAME
+        value: Todo Backend API

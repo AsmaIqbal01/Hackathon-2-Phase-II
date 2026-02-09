@@ -34,11 +34,18 @@ export async function apiClient<T>(
   // Build full URL
   const url = `${API_BASE_URL}${endpoint}`;
 
-  // Make request
-  const response = await fetch(url, {
-    ...fetchOptions,
-    headers,
-  });
+  // Make request with network error handling
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch (error) {
+    // Network error (backend unreachable, CORS, etc.)
+    console.error('Network error:', error);
+    throw new Error('Failed to connect to server. Please ensure the backend is running.');
+  }
 
   // Handle 401 Unauthorized - redirect to login
   if (response.status === 401) {

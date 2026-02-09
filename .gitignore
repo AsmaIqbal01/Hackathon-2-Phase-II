@@ -79,3 +79,7 @@ frontend/.env.development.local
 
 # Local database files (development only)
 *.db
+
+# Deployment configuration (contains sensitive credentials)
+DEPLOYMENT-CONFIG.txt
+setup-and-run.sh

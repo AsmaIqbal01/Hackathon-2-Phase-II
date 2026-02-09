@@ -6,7 +6,7 @@
   "env": {
     "NEXT_PUBLIC_API_URL": {
       "description": "Backend API URL (Render deployment URL + /api)",
-      "value": "https://your-backend-name.onrender.com/api"
+      "value": "https://hackathon-2-phase-ii.onrender.com/api"
     }
   }
 }

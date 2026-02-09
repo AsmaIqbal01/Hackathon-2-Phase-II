@@ -17,6 +17,17 @@ from src.models.user import User
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+# CORS preflight handlers for auth endpoints
+@router.options("/register")
+@router.options("/login")
+@router.options("/refresh")
+@router.options("/logout")
+@router.options("/me")
+async def options_handler():
+    """Handle CORS preflight requests for auth endpoints."""
+    return Response(status_code=200)
+
+
 @router.post(
     "/register",
     response_model=AuthResponse,
